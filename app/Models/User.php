@@ -42,4 +42,35 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Always encrypt the password when it is updated.
+     *
+     * @param $value
+     * @return string
+     */
+    public function setPasswordAttribute($value)
+    {
+        $this->attributes['password'] = bcrypt($value);
+    }
+
+    public function biodata(): HasOne
+    {
+        return $this->hasOne(Biodata::class);
+    }
+
+    public function address(): HasOne
+    {
+        return $this->hasOne(Address::class);
+    }
+
+    public function education(): HasOne
+    {
+        return $this->hasOne(Education::class);
+    }
+
+    public function office(): HasOne
+    {
+        return $this->hasOne(Office::class);
+    }
 }
