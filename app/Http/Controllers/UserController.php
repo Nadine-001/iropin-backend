@@ -9,28 +9,12 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        // $users = User::all();
-        // return response()->json($users);
-
-        return new UserCollection(Task::all());
+        $users = User::all();
+        return response()->json($users);
     }
 
-    public function show(Request $request, User $user)
+    public function profile(Request $request)
     {
-        // return new UserResource($users);
-
-        return new UserCollection(Task::all());
-    }
-
-    public function store(Request $request)
-    {
-        $validated = $request -> validate([
-            'password' => 'required|min:8',
-        ]);
-
-        $user = User::create($validated);
-        return new UserResource($users);
-
-        // return new UserCollection(Task::all());
+        return $request->user();
     }
 }
