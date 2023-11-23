@@ -12,6 +12,7 @@ use App\Models\RegistrationPayment;
 use App\Models\Role;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -29,7 +30,7 @@ class User extends Authenticatable
         // 'name',
         'email',
         'password',
-        // 'role_id',
+        'role_id',
         'is_active',
     ];
 
@@ -78,7 +79,7 @@ class User extends Authenticatable
         return $this->hasOne(RegistrationPayment::class);
     }
 
-    public function role(): belongsTo
+    public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
     }

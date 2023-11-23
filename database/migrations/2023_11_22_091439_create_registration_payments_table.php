@@ -16,10 +16,11 @@ return new class extends Migration
             $table->foreignId('user_id')->index();
             $table->foreign('user_id')->references('id')->on('users');
             $table->string('cost');
-            $table->string('payment_receipt');
+            $table->string('payment_receipt')->nullable();
             $table->date('registration_date');
-            $table->date('payment_date')->nullable();
             $table->date('exp_payment_date');
+            $table->date('payment_date')->nullable();
+            $table->boolean('status')->nullable()->default(0);
             $table->timestamps();
         });
     }

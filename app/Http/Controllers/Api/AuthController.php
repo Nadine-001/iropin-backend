@@ -8,6 +8,7 @@ use App\Models\Biodata;
 use App\Models\Address;
 use App\Models\Education;
 use App\Models\Office;
+use App\Models\RegistrationPayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -101,6 +102,17 @@ class AuthController extends Controller
                 'SIP' => $request->SIP,
             ]);
 
+            $reg_date = date('Y-m-d');
+            $exp_date = date('Y-m-d', strtotime($reg_date . ' +1 day'));
+
+            $reg_payment = RegistrationPayment::create([
+                'user_id' => $user->id,
+                'cost' => '[biaya registrasi]',
+                'registration_date' => $reg_date,
+                'exp_payment_date' => $exp_date,
+                'status' => 0
+            ]);
+
             DB::commit();
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -118,6 +130,7 @@ class AuthController extends Controller
             'address' => $address,
             'education' => $education,
             'office' => $office,
+            'registration' => $reg_payment,
             'access_token' => $token,
             'token_type' => 'Bearer'
         ]);
@@ -145,7 +158,6 @@ class AuthController extends Controller
     public function update(Request $request)
     {
         $user = Auth::user();
-
         $validator = Validator::make($request->all(), [
             'name' => 'string|max:255',
             'email' => 'string|max:255|unique:users,email,' . $user->id,
@@ -165,7 +177,6 @@ class AuthController extends Controller
         try {
             $user->update([
                 'email' => $request->email,
-                'password' => Hash::make($request->password)
             ]);
 
             $user->biodata->update([
