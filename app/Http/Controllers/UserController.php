@@ -11,8 +11,18 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $users = User::all();
-        return response()->json($users);
+        $users = User::with(['biodata', 'address', 'office'])->get();
+
+        $user_data = $users->map(function ($user) {
+            return [
+                'user' => $user->only('id', 'email', 'role_id', 'is_active', 'membership_number'),
+                'biodata' => $user->biodata ? $user->biodata->name : null,
+                'address' => $user->address ? $user->address->regency_city : null,
+                'office' => $user->office ? $user->office->office_name : null,
+            ];
+        });
+
+        return response()->json(['user_data' => $user_data]);
     }
 
     public function profile(Request $request)
@@ -33,23 +43,30 @@ class UserController extends Controller
 
         // generate nomor anggota
         if (!$user->membership_number) {
-            $registration_count = User::whereYear('created_at', Carbon::now()->year)
-                ->whereMonth('created_at', Carbon::now()->month)
-                ->count();
 
-            $membershipNumber = 'CBD-' . now()->format('Ymd') . '-' . ($registration_count + 1);
+            $latest_membership_number = User::whereYear('created_at', Carbon::now()->year)
+                ->whereMonth('created_at', Carbon::now()->month)
+                ->where('is_active', 1)
+                ->whereNotNull('membership_number')
+                ->orderBy('membership_number', 'desc')
+                ->first();
+
+            $get_number = $latest_membership_number ? explode('-', $latest_membership_number->membership_number)[2] : 0;
+            $last_number = intval($get_number);
+
+            $membershipNumber = 'CBD-' . now()->format('Ymd') . '-' . ($last_number + 1);
+
+            $user->membership_number = $membershipNumber;
         } else {
-            return response()->json([
-                'message' => 'Akun sudah diaktifkan'
-            ]);
+            $membershipNumber = $user->membership_number;
         }
 
         $user->is_active = true;
-        $user->membership_number = $membershipNumber;
         $user->save();
 
         return response()->json([
-            'message' => 'Akun berhasil diaktifkan'
+            'message' => 'Succesfully activate user',
+            'access_token' => $membershipNumber,
         ]);
     }
 
@@ -60,7 +77,7 @@ class UserController extends Controller
         $user->save();
 
         return response()->json([
-            'message' => 'Akun berhasil dinonaktifkan'
+            'message' => 'Succesfully deactivate user'
         ]);
     }
 }
