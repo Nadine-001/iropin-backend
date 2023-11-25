@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-class File extends Model
+class Invoice extends Model
 {
     use HasFactory;
 
@@ -19,10 +19,13 @@ class File extends Model
         'path',
         'ext',
         'file_name',
+        'is_checked'
     ];
 
     public function licence_form_detail(): HasOne
     {
         return $this->belongsTo(LicenceFormDetail::class);
     }
+
+
 }

@@ -102,13 +102,13 @@ class AuthController extends Controller
                 'SIP' => $request->SIP,
             ]);
 
-            $reg_date = date('Y-m-d');
-            $exp_date = date('Y-m-d', strtotime($reg_date . ' +1 day'));
+            $regist_date = date('Y-m-d');
+            $exp_date = date('Y-m-d', strtotime($regist_date . ' +1 day'));
 
             $reg_payment = RegistrationPayment::create([
                 'user_id' => $user->id,
                 'cost' => '[biaya registrasi]',
-                'registration_date' => $reg_date,
+                'registration_date' => $regist_date,
                 'exp_payment_date' => $exp_date,
                 'status' => 0
             ]);

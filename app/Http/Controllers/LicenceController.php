@@ -15,6 +15,7 @@ class LicenceController extends Controller
     function requestLicence(Request $request)
     {
         $user = Auth::user();
+
         $validator = Validator::make($request->all(), [
             'licence_type' => 'required',
         ]);
@@ -108,13 +109,19 @@ class LicenceController extends Controller
                 'file_path' => $file->file->path,
             ];
         });
-        
+
         return response()->json([
-            'membership_payment' => $licence->membership_number,
+            'membership_number' => $licence->membership_number,
             'name' => $licence->name,
             'email' => $licence->email,
             'licence_type' => $licence->licence_type,
-            'file_data' => $file_data
+            'file_data' => $file_data,
         ]);
+    }
+
+    function verifyLicence(Request $request, $licence_id) {
+        $licence = Licence::findOrFail($licence_id);
+
+        
     }
 }

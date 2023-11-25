@@ -29,6 +29,6 @@ class LicenceFormDetail extends Model
 
     public function file(): BelongsTo
     {
-        return $this->belongsTo(FIle::class);
+        return $this->belongsTo(File::class);
     }
 }
