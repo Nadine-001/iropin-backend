@@ -55,13 +55,8 @@ class WebinarController extends Controller
 
     function validateWebinar(Request $request, $participant_id)
     {
-        $participant = Participant::findOrFail($participant_id)
-            ->with('invoice')
-            ->first();
+        $participant = Participant::with('invoice')->find($participant_id);
 
-        $webinar_id = $participant->webinar_id;
-        $invoice_id = $participant->invoice_id;
-        dd($participant);
         $invoice = $participant->invoice;
 
         $checked = $request->input('checked');
