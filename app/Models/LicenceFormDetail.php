@@ -22,7 +22,7 @@ class LicenceFormDetail extends Model
         'licence_id'
     ];
 
-    public function license(): BelongsTo
+    public function licence(): BelongsTo
     {
         return $this->belongsTo(Licence::class);
     }

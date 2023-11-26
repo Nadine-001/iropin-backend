@@ -19,6 +19,7 @@ class File extends Model
         'path',
         'ext',
         'file_name',
+        'is_checked'
     ];
 
     public function licence_form_detail(): HasOne

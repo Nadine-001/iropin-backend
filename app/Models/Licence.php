@@ -23,6 +23,7 @@ class Licence extends Model
         'email',
         'licence_type',
         'description',
+        'status'
     ];
 
     public function licence_form_detail(): HasMany

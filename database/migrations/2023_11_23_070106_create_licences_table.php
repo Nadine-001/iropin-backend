@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('email');
             $table->string('licence_type');
             $table->string('description')->nullable();
-            $table->string('status')->nullable()->default('pending');
+            $table->boolean('status')->nullable()->default(0);
             $table->timestamps();
         });
     }

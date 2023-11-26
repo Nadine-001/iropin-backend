@@ -35,10 +35,12 @@ class LicenceController extends Controller
                 'description' => $request->description,
             ]);
 
+            $count = 1;
             $files = [];
-            if ($request->file('files')){
+            if ($request->file('files')) {
                 foreach($request->file('files') as $key => $value)
                 {
+                    $key = "doc" . $request->licence_type . "_" . $count;
                     $ext = $value->getClientOriginalExtension();
                     $file_name = time() . " - " . $value->getClientOriginalName();
                     $file_name = str_replace(' ', '', $file_name);
@@ -59,6 +61,8 @@ class LicenceController extends Controller
                         'val' => $file_name,
                         'file_id' => $file->id,
                     ]);
+
+                    $count++;
                 }
             }
 
@@ -119,9 +123,61 @@ class LicenceController extends Controller
         ]);
     }
 
-    function verifyLicence(Request $request, $licence_id) {
+    function validateLicence(Request $request, $licence_id) {
         $licence = Licence::findOrFail($licence_id);
 
-        
+        $checked = $request->input('checked');
+        $checked_decode = json_decode($checked, true);
+
+        foreach ($checked_decode as $fileName => $is_checked) {
+            $licence_detail = LicenceFormDetail::where('licence_id', $licence->id)
+                ->whereHas('file', function ($query) use ($fileName) {
+                    $query->where('file_name', $fileName);
+                })
+                ->firstOrFail();
+
+            $file = $licence_detail->file;
+            $file->update(['is_checked' => $is_checked]);
+        }
+
+        $licence->update(['status' => 1]);
+
+        return response()->json([
+            'message' => 'licence verified'
+        ]);
+    }
+
+    function declineLicence(Request $request, $licence_id) {
+        $validator = Validator::make($request->all(), [
+            'note' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors());
+        }
+
+        $licence = Licence::findOrFail($licence_id);
+
+        $checked = $request->input('checked');
+        $checked_decode = json_decode($checked, true);
+
+        foreach ($checked_decode as $fileName => $is_checked) {
+            $licence_detail = LicenceFormDetail::where('licence_id', $licence->id)
+                ->whereHas('file', function ($query) use ($fileName) {
+                    $query->where('file_name', $fileName);
+                })
+                ->firstOrFail();
+
+            $file = $licence_detail->file;
+            $file->update(['is_checked' => $is_checked]);
+        }
+
+        $licence->update(['status' => 3]);
+        $licence->update(['note' => $request->note]);
+
+        return response()->json([
+            'message' => 'participant denied'
+        ]);
+
     }
 }
