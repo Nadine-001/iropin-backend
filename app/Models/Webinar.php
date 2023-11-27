@@ -23,7 +23,7 @@ class Webinar extends Model
         'place',
         'description',
         'poster',
-        'theme',
+        'materi',
         'link',
     ];
 

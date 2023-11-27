@@ -19,7 +19,8 @@ class Participant extends Model
         'user_id',
         'webinar_id',
         'invoice_id',
-        'status'
+        'status',
+        'note'
     ];
 
     public function webinar(): BelongsTo

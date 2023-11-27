@@ -11,16 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('registration_payments', function (Blueprint $table) {
+        Schema::create('registrations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->index();
             $table->foreign('user_id')->references('id')->on('users');
-            $table->string('cost');
-            $table->string('payment_receipt')->nullable();
-            $table->date('registration_date');
-            $table->date('exp_payment_date');
-            $table->date('payment_date')->nullable();
             $table->boolean('status')->nullable()->default(0);
+            $table->string('note')->nullable();
             $table->timestamps();
         });
     }
@@ -30,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('registration_payments');
+        Schema::dropIfExists('registrations');
     }
 };

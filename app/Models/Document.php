@@ -4,9 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
-class File extends Model
+class Document extends Model
 {
     use HasFactory;
 
@@ -22,8 +21,7 @@ class File extends Model
         'is_checked'
     ];
 
-    public function licence_form_detail(): HasOne
-    {
-        return $this->hasOne(LicenceFormDetail::class);
+    function registration_detail() {
+        return $this->hasOne(RegistrationFormDetail::class);
     }
 }

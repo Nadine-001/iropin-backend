@@ -15,12 +15,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->index();
             $table->foreign('user_id')->references('id')->on('users');
+            $table->string('office_regency_city');
             $table->string('office_name');
             $table->string('office_address');
             $table->string('employment_status');
             $table->string('position')->nullable();
             $table->string('office_phone')->nullable();
-            $table->string('SIP');
             $table->timestamps();
         });
     }

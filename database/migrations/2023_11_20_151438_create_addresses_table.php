@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('address');
             $table->string('province')->default('Jawa Tengah');
             $table->string('regency_city');
+            $table->string('zip_code');
             $table->string('telephone')->nullable();
             $table->timestamps();
         });

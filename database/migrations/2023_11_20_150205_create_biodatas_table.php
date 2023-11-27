@@ -25,12 +25,9 @@ return new class extends Migration
             $table->string('religion')->nullable();
             $table->string('mobile_phone');
             $table->string('whatsapp_number');
-            $table->string('foto_KTP');
-            $table->string('pas_foto');
             $table->string('STR_number');
             $table->date('publish_date');
             $table->date('exp_date');
-            $table->string('STR_file');
             $table->timestamps();
         });
     }

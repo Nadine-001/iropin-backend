@@ -24,6 +24,7 @@ class Office extends Model
         'position',
         'office_phone',
         'SIP',
+        'office_regency_city',
     ];
 
     public function user(): BelongsTo

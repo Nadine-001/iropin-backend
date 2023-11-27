@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('education', function (Blueprint $table) {
+        Schema::create('documents', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->index();
-            $table->foreign('user_id')->references('id')->on('users');
-            $table->string('institution');
-            $table->string('study')->nullable();
+            $table->string('path');
+            $table->string('ext');
+            $table->string('file_name');
+            $table->boolean('is_checked');
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('education');
+        Schema::dropIfExists('documents');
     }
 };
