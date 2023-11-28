@@ -17,9 +17,9 @@ return new class extends Migration
             $table->foreign('user_id')->references('id')->on('users');
             $table->string('office_regency_city');
             $table->string('office_name');
-            $table->string('office_address');
+            $table->string('office_address')->nullable();
             $table->string('employment_status');
-            $table->string('position')->nullable();
+            $table->string('position');
             $table->string('office_phone')->nullable();
             $table->timestamps();
         });

@@ -23,8 +23,8 @@ return new class extends Migration
             $table->date('birthdate');
             $table->string('gender');
             $table->string('religion')->nullable();
-            $table->string('mobile_phone');
-            $table->string('whatsapp_number');
+            $table->string('mobile_phone')->nullable();
+            $table->string('whatsapp_number')->nullable();
             $table->string('STR_number');
             $table->date('publish_date');
             $table->date('exp_date');

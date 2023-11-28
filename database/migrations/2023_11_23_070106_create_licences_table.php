@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('licence_type');
             $table->string('description')->nullable();
             $table->boolean('status')->nullable()->default(0);
+            $table->string('note')->nullable();
             $table->timestamps();
         });
     }
