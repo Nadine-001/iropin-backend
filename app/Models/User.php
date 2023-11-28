@@ -32,7 +32,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role_id',
-        'is_active',
+        'status',
     ];
 
     /**
@@ -75,9 +75,9 @@ class User extends Authenticatable
         return $this->hasOne(Office::class);
     }
 
-    public function registration_payment(): HasOne
+    public function registration(): HasOne
     {
-        return $this->hasOne(RegistrationPayment::class);
+        return $this->hasOne(Registration::class);
     }
 
     public function role(): BelongsTo
