@@ -6,7 +6,6 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LicenceController;
 use App\Http\Controllers\LicenceFormDetailController;
 use App\Http\Controllers\RegistrationController;
-use App\Http\Controllers\RegistrationPaymentController;
 use App\Http\Controllers\WebinarController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -36,7 +35,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout']);
 
-
     Route::middleware('manager')->group(function () {
         Route::get('/userList', [UserController::class, 'userList']);
         Route::post('/addUser', [UserController::class, 'addUser']);
@@ -46,13 +44,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('operator')->group(function () {
         Route::get('/getUsers', [UserController::class, 'getUsers']);
-        Route::get('/getUsers/{user_id}', [UserController::class, 'getUsersDetail']);
+        Route::get('/getUsers/{user_id}', [UserController::class, 'getUserDetail']);
         Route::post('/validateRegistration/{user_id}', [UserController::class, 'validateRegistration']);
         Route::post('/declineRegistration/{licence_id}', [UserController::class, 'declineRegistration']);
-
-        // Route::get('/checkPaymentRegistration/{user_id}', [RegistrationPaymentController::class, 'checkPaymentRegistration']);
-        Route::put('/users/{user_id}/activate', [UserController::class, 'activateUser']);
-        Route::put('/users/{user_id}/deactivate', [UserController::class, 'deactivateUser']);
 
         Route::get('/licenceList', [LicenceController::class, 'licenceList']);
         Route::get('/licenceList/{licence_id}', [LicenceController::class, 'licenceListDetail']);
