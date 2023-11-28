@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Invoice;
 use App\Models\Participant;
 use App\Models\Webinar;
 use Illuminate\Support\Facades\Validator;
@@ -173,7 +172,7 @@ class WebinarController extends Controller
             $invoice->is_checked = $is_checked;
         }
 
-        $participant->status = 3;
+        $participant->status = 2;
         $participant->note = $request->note;
 
         $invoice->save();

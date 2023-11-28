@@ -172,8 +172,12 @@ class LicenceController extends Controller
             $file->update(['is_checked' => $is_checked]);
         }
 
-        $licence->update(['status' => 3]);
-        $licence->update(['note' => $request->note]);
+        $licence->update([
+            'status' => 2,
+            'note' => $request->note
+        ]);
+
+        // $licence->update([]);
 
         return response()->json([
             'message' => 'participant denied'

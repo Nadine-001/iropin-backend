@@ -17,15 +17,16 @@ class UserController extends Controller
     {
         $loginUser = Auth::user();
         $users = User::where('role_id', '<', $loginUser->role_id)
-            ->with(['biodata', 'address', 'office'])
+            ->with(['biodata', 'address', 'office', 'registration'])
             ->get();
 
         $user_data = $users->map(function ($user) {
             return [
-                'user' => $user->only('id', 'email', 'role_id', 'is_active', 'membership_number'),
+                'user' => $user->only('id', 'email', 'role_id', 'membership_number'),
                 'name' => $user->biodata ? $user->biodata->name : null,
                 'city' => $user->office ? $user->office->office_regency_city : null,
                 'office' => $user->office ? $user->office->office_name : null,
+                'status' => $user->registration ? $user->registration->status : null,
             ];
         });
 
@@ -36,16 +37,16 @@ class UserController extends Controller
     {
         $user = User::findOrFail($user_id);
 
-        $document = Registration::where('user_id', $user->id)
-            ->with('document')
-            ->get();
+        $registration = Registration::where('user_id', $user->id)->firstOrFail();
 
-        $document_data = $document->map(function ($document) {
-            return [
-                'document_name' => $document->val,
-                'document_path' => $document->document->path,
-            ];
-        });
+        $registration_detail = RegistrationFormDetail::where('registration_id', $registration->id)
+            ->with('document')
+            ->first();
+
+        $document_data = [
+            'document_name' => $registration_detail->val, // Ganti dengan kolom yang sesuai
+            'document_path' => $registration_detail->document->path,
+        ];
 
         return response()->json([
             'email' => $user->email,
@@ -69,8 +70,8 @@ class UserController extends Controller
             'zip_code' => $user->address->zip_code,
             'institution' => $user->education->institution,
             'study' => $user->education->study,
-            'status' => $user->status,
-            'file_data' => $document_data,
+            'status' => $registration->status,
+            'document_data' => $document_data,
         ]);
     }
 
@@ -80,25 +81,27 @@ class UserController extends Controller
         $checked = $request->input('checked');
         $checked_decode = json_decode($checked, true);
 
-        foreach ($checked_decode as $fileName => $is_checked) {
-            $document_detail = RegistrationFormDetail::where('user_id', $user->id)
-                ->whereHas('document', function ($query) use ($fileName) {
-                    $query->where('file_name', $fileName);
-                })
-                ->firstOrFail();
+        $registration = Registration::where('user_id', $user->id)->firstOrFail();
 
-            $file = $document_detail->file;
-            $file->update(['is_checked' => $is_checked]);
+        foreach ($checked_decode as $key => $is_checked) {
+            $registration_detail = RegistrationFormDetail::where('registration_id', $registration->id)
+                ->where('key', $key)
+                ->with('document')
+                ->first();
+
+            $document = $registration_detail->document;
+            $document->update(['is_checked' => $is_checked]);
         }
 
-        $user->update(['status' => 1]);
+        $user->status = 1;          // sudah diaktivasi
+        $registration->status = 1;  // sudah diaktivasi
 
         // generate membership number
         if (!$user->membership_number) {
 
             $latest_membership_number = User::whereYear('created_at', Carbon::now()->year)
                 ->whereMonth('created_at', Carbon::now()->month)
-                ->where('is_active', 1)
+                ->where('status', 1)
                 ->whereNotNull('membership_number')
                 ->orderBy('membership_number', 'desc')
                 ->first();
@@ -106,16 +109,59 @@ class UserController extends Controller
             $get_number = $latest_membership_number ? explode('-', $latest_membership_number->membership_number)[2] : 0;
             $last_number = intval($get_number);
 
+
             $membershipNumber = 'CBD-' . now()->format('Ymd') . '-' . ($last_number + 1);
+            // dd($membershipNumber);
 
             $user->membership_number = $membershipNumber;
         } else {
             $membershipNumber = $user->membership_number;
         }
 
+        $user->save();
+        $registration->save();
+
         return response()->json([
             'message' => 'Succesfully activate user',
             'access_token' => $membershipNumber,
+        ]);
+    }
+
+    function declineRegistration(Request $request, $user_id) {
+        $validator = Validator::make($request->all(), [
+            'note' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors());
+        }
+
+        $user = User::findOrFail($user_id);
+
+        $checked = $request->input('checked');
+        $checked_decode = json_decode($checked, true);
+
+        $registration_id = Registration::where('user_id', $user->id)->value('id');
+
+        $registration = Registration::where('user_id', $user->id);
+
+        foreach ($checked_decode as $key => $is_checked) {
+            $registration_detail = RegistrationFormDetail::where('registration_id', $registration_id)
+                ->where('key', $key)
+                ->with('document')
+                ->first();
+
+            $document = $registration_detail->document;
+            $document->update(['is_checked' => $is_checked]);
+        }
+
+        $registration->update([
+            'status' => 2,
+            'note' => $request->note
+        ]);
+
+        return response()->json([
+            'message' => 'user activation denied'
         ]);
     }
 
@@ -197,55 +243,11 @@ class UserController extends Controller
     {
         $user = Auth::user();
         return response()->json([
-            'user' => $user->only('id', 'email', 'role_id', 'is_active'),
+            'user' => $user->only('id', 'email', 'role_id', 'status'),
             'biodata' => $user->biodata,
             'address' => $user->address,
             'education' => $user->education,
             'office' => $user->office,
-        ]);
-    }
-
-    public function activateUser(Request $request, $user_id)
-    {
-        $user = User::findOrFail($user_id);
-
-        // generate membership number
-        if (!$user->membership_number) {
-
-            $latest_membership_number = User::whereYear('created_at', Carbon::now()->year)
-                ->whereMonth('created_at', Carbon::now()->month)
-                ->where('is_active', 1)
-                ->whereNotNull('membership_number')
-                ->orderBy('membership_number', 'desc')
-                ->first();
-
-            $get_number = $latest_membership_number ? explode('-', $latest_membership_number->membership_number)[2] : 0;
-            $last_number = intval($get_number);
-
-            $membershipNumber = 'CBD-' . now()->format('Ymd') . '-' . ($last_number + 1);
-
-            $user->membership_number = $membershipNumber;
-        } else {
-            $membershipNumber = $user->membership_number;
-        }
-
-        $user->is_active = true;
-        $user->save();
-
-        return response()->json([
-            'message' => 'Succesfully activate user',
-            'access_token' => $membershipNumber,
-        ]);
-    }
-
-    public function deactivateUser(Request $request, $user_id)
-    {
-        $user = User::findOrFail($user_id);
-        $user->is_active = false;
-        $user->save();
-
-        return response()->json([
-            'message' => 'Succesfully deactivate user'
         ]);
     }
 }
