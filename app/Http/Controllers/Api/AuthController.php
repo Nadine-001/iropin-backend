@@ -32,7 +32,8 @@ class AuthController extends Controller
 
     public function update(Request $request)
     {
-        $user = Auth::user();
+        $user = User::findOrFail(Auth::user()->id);
+
         $validator = Validator::make($request->all(), [
             'name' => 'string|max:255',
             'email' => 'string|max:255|unique:users,email,' . $user->id,
@@ -106,7 +107,9 @@ class AuthController extends Controller
     public function logout()
     {
         try {
-            Auth::user()->tokens()->delete();
+            $user = User::findOrFail(Auth::user()->id);
+            $user->tokens()->delete();
+
             return response()->json([
                 'message' => 'logout success'
             ]);

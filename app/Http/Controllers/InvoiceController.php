@@ -20,58 +20,57 @@ class InvoiceController extends Controller
             ->where('webinar_id', $webinar_id)
             ->first();
 
-        if (!$participant) {
-            $validator = Validator::make($request->all(), [
-                'invoice' => 'required',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json($validator->errors());
-            }
-
-            DB::beginTransaction();
-            try {
-                if ($request->file('invoice')){
-                    $invoice = $request->file('invoice');
-
-                    $ext = $invoice->getClientOriginalExtension();
-                    $file_name = time() . " - " . $invoice->getClientOriginalName();
-                    $file_name = str_replace(' ', '', $file_name);
-                    $path = asset("uploads/" . $file_name);
-                    $invoice->move(public_path('uploads/invoiceWebinar'), $file_name);
-
-                    $invoice = Invoice::create([
-                        'path' => $path,
-                        'ext' => $ext,
-                        'file_name' => $file_name,
-                    ]);
-
-                    $participant = Participant::create([
-                        'invoice_id' => $invoice->id,
-                        'user_id' => $user->id,
-                        'webinar_id' => $webinar->id,
-                        'file_id' => $invoice->id,
-                    ]);
-                }
-
-                DB::commit();
-            } catch (\Throwable $th) {
-                DB::rollBack();
-                return response()->json([
-                    'message' => 'register failed',
-                    'errors' => $th->getMessage()
-                ]);
-            }
-
-        } else {
+        if ($participant) {
             return response()->json([
                 'message' => 'Invoice already uploaded',
             ]);
         }
 
+        $validator = Validator::make($request->all(), [
+            'invoice' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors());
+        }
+
+        DB::beginTransaction();
+        try {
+            if ($request->file('invoice')) {
+                $invoice = $request->file('invoice');
+
+                $ext = $invoice->getClientOriginalExtension();
+                $file_name = time() . " - " . $invoice->getClientOriginalName();
+                $file_name = str_replace(' ', '', $file_name);
+                $path = asset("uploads/" . $file_name);
+                $invoice->move(public_path('uploads/invoiceWebinar'), $file_name);
+
+                $invoice = Invoice::create([
+                    'path' => $path,
+                    'ext' => $ext,
+                    'file_name' => $file_name,
+                ]);
+
+                $participant = Participant::create([
+                    'invoice_id' => $invoice->id,
+                    'user_id' => $user->id,
+                    'webinar_id' => $webinar->id,
+                    'file_id' => $invoice->id,
+                ]);
+            }
+
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'register failed',
+                'errors' => $th->getMessage()
+            ]);
+        }
+
         return response()->json([
-                'message' => 'Invoice uploaded successfully',
-                'invoice' => $invoice,
+            'message' => 'Invoice uploaded successfully',
+            'invoice' => $invoice,
         ]);
     }
 }

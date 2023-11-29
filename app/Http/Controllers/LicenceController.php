@@ -12,8 +12,7 @@ use Illuminate\Support\Facades\Validator;
 
 class LicenceController extends Controller
 {
-    function requestLicence(Request $request)
-    {
+    function requestLicence(Request $request) {
         $user = Auth::user();
 
         $validator = Validator::make($request->all(), [
@@ -81,8 +80,7 @@ class LicenceController extends Controller
         ]);
     }
 
-    function licenceList(Request $request)
-    {
+    function licenceList(Request $request) {
         $licences = Licence::all();
 
         $licence_data = $licences->map(function ($licence) {
@@ -100,19 +98,25 @@ class LicenceController extends Controller
         ]);
     }
 
-    function licenceListDetail(Request $request, $licence_id)
-    {
+    function licenceListDetail(Request $request, $licence_id) {
         $licence = Licence::findOrFail($licence_id);
         $file = LicenceFormDetail::where('licence_id', $licence->id)
             ->with('file')
             ->get();
 
-        $file_data = $file->map(function ($file) {
-            return [
-                'file_name' => $file->val,
-                'file_path' => $file->file->path,
-            ];
-        });
+        try {
+            $file_data = $file->map(function ($file) {
+                return [
+                    'file_name' => $file->val,
+                    'file_path' => $file->file->path,
+                ];
+            });
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'failed to get licence list',
+                'errors' => $th->getMessage()
+            ]);
+        }
 
         return response()->json([
             'membership_number' => $licence->membership_number,
@@ -126,18 +130,25 @@ class LicenceController extends Controller
     function validateLicence(Request $request, $licence_id) {
         $licence = Licence::findOrFail($licence_id);
 
-        $checked = $request->input('checked');
-        $checked_decode = json_decode($checked, true);
+        try {
+            $checked = $request->input('checked');
+            $checked_decode = json_decode($checked, true);
 
-        foreach ($checked_decode as $fileName => $is_checked) {
-            $licence_detail = LicenceFormDetail::where('licence_id', $licence->id)
-                ->whereHas('file', function ($query) use ($fileName) {
-                    $query->where('file_name', $fileName);
-                })
-                ->firstOrFail();
+            foreach ($checked_decode as $fileName => $is_checked) {
+                $licence_detail = LicenceFormDetail::where('licence_id', $licence->id)
+                    ->whereHas('file', function ($query) use ($fileName) {
+                        $query->where('file_name', $fileName);
+                    })
+                    ->firstOrFail();
 
-            $file = $licence_detail->file;
-            $file->update(['is_checked' => $is_checked]);
+                $file = $licence_detail->file;
+                $file->update(['is_checked' => $is_checked]);
+            }
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'failed to checklist the files',
+                'errors' => $th->getMessage()
+            ]);
         }
 
         $licence->update(['status' => 1]);
@@ -158,18 +169,25 @@ class LicenceController extends Controller
 
         $licence = Licence::findOrFail($licence_id);
 
-        $checked = $request->input('checked');
-        $checked_decode = json_decode($checked, true);
+        try {
+            $checked = $request->input('checked');
+            $checked_decode = json_decode($checked, true);
 
-        foreach ($checked_decode as $fileName => $is_checked) {
-            $licence_detail = LicenceFormDetail::where('licence_id', $licence->id)
-                ->whereHas('file', function ($query) use ($fileName) {
-                    $query->where('file_name', $fileName);
-                })
-                ->firstOrFail();
+            foreach ($checked_decode as $fileName => $is_checked) {
+                $licence_detail = LicenceFormDetail::where('licence_id', $licence->id)
+                    ->whereHas('file', function ($query) use ($fileName) {
+                        $query->where('file_name', $fileName);
+                    })
+                    ->firstOrFail();
 
-            $file = $licence_detail->file;
-            $file->update(['is_checked' => $is_checked]);
+                $file = $licence_detail->file;
+                $file->update(['is_checked' => $is_checked]);
+            }
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'failed to checklist the files',
+                'errors' => $th->getMessage()
+            ]);
         }
 
         $licence->update([
@@ -177,11 +195,8 @@ class LicenceController extends Controller
             'note' => $request->note
         ]);
 
-        // $licence->update([]);
-
         return response()->json([
             'message' => 'participant denied'
         ]);
-
     }
 }

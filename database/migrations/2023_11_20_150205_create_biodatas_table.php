@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('prefix')->nullable();
             $table->string('sufix')->nullable();
-            $table->int('NIK');
+            $table->string('NIK');
             $table->string('birthplace');
             $table->date('birthdate');
             $table->string('gender');

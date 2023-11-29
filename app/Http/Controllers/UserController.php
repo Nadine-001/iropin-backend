@@ -7,40 +7,40 @@ use App\Models\RegistrationFormDetail;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
-    public function getUsers(Request $request)
-    {
+    public function getUsers(Request $request) {
         $loginUser = Auth::user();
         $users = User::where('role_id', '<', $loginUser->role_id)
             ->with(['biodata', 'address', 'office', 'registration'])
             ->get();
 
-        $user_data = $users->map(function ($user) {
-            return [
-                'user' => $user->only('id', 'email', 'role_id', 'membership_number'),
-                'name' => $user->biodata ? $user->biodata->name : null,
-                'city' => $user->office ? $user->office->office_regency_city : null,
-                'office' => $user->office ? $user->office->office_name : null,
-                'status' => $user->registration ? $user->registration->status : null,
-            ];
-        });
-
-        if (!$user_data) {
+        try {
+            $user_data = $users->map(function ($user) {
+                return [
+                    'user' => $user->only('id', 'email', 'role_id', 'membership_number'),
+                    'name' => $user->biodata ? $user->biodata->name : null,
+                    'city' => $user->office ? $user->office->office_regency_city : null,
+                    'office' => $user->office ? $user->office->office_name : null,
+                    'status' => $user->registration ? $user->registration->status : null,
+                ];
+            });
+        } catch (\Throwable $th) {
             return response()->json([
-                "message" => "failed to get user list"
-            ], 404);
+                'message' => 'failed to get user list',
+                'errors' => $th->getMessage()
+            ]);
         }
 
         return response()->json(['user_data' => $user_data]);
     }
 
-    function getUserDetail(Request $request, $user_id)
-    {
+    function getUserDetail(Request $request, $user_id) {
         $user = User::findOrFail($user_id);
 
         $registration = Registration::where('user_id', $user->id)->firstOrFail();
@@ -91,61 +91,64 @@ class UserController extends Controller
     function validateRegistration(Request $request, $user_id) {
         $user = User::findOrFail($user_id);
 
-        $checked = $request->input('checked');
-        $checked_decode = json_decode($checked, true);
-
         $registration = Registration::where('user_id', $user->id)->firstOrFail();
 
-        foreach ($checked_decode as $key => $is_checked) {
-            $registration_detail = RegistrationFormDetail::where('registration_id', $registration->id)
-                ->where('key', $key)
-                ->with('document')
-                ->first();
+        try {
+            $checked = $request->input('checked');
+            $checked_decode = json_decode($checked, true);
 
-            try {
+            if ($checked_decode === null) {
+                throw new Exception("please provide a valid json");
+            }
+
+            foreach ($checked_decode as $key => $is_checked) {
+                $registration_detail = RegistrationFormDetail::where('registration_id', $registration->id)
+                    ->where('key', $key)
+                    ->with('document')
+                    ->first();
+
                 $document = $registration_detail->document;
                 $document->update(['is_checked' => $is_checked]);
-            } catch (\Throwable $th) {
-                return response()->json([
-                    'message' => 'failed to checklist the documents',
-                    'errors' => $th->getMessage()
-                ]);
             }
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'failed to checklist the documents',
+                'errors' => $th->getMessage()
+            ]);
         }
 
         try {
             $user->status = 1;          // sudah diaktivasi
             $registration->status = 1;  // sudah diaktivasi
+
+            // generate membership number
+            if (!$user->membership_number) {
+
+                $latest_membership_number = User::whereYear('created_at', Carbon::now()->year)
+                    ->whereMonth('created_at', Carbon::now()->month)
+                    ->where('status', 1)
+                    ->whereNotNull('membership_number')
+                    ->orderBy('membership_number', 'desc')
+                    ->first();
+
+                $get_number = $latest_membership_number ? explode('-', $latest_membership_number->membership_number)[2] : 0;
+                $last_number = intval($get_number);
+
+                $membershipNumber = 'CBD-' . now()->format('Ymd') . '-' . ($last_number + 1);
+
+                $user->membership_number = $membershipNumber;
+            } else {
+                $membershipNumber = $user->membership_number;
+            }
+
+            $user->save();
+            $registration->save();
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'failed to change user status',
                 'errors' => $th->getMessage()
             ]);
         }
-
-        // generate membership number
-        if (!$user->membership_number) {
-
-            $latest_membership_number = User::whereYear('created_at', Carbon::now()->year)
-                ->whereMonth('created_at', Carbon::now()->month)
-                ->where('status', 1)
-                ->whereNotNull('membership_number')
-                ->orderBy('membership_number', 'desc')
-                ->first();
-
-            $get_number = $latest_membership_number ? explode('-', $latest_membership_number->membership_number)[2] : 0;
-            $last_number = intval($get_number);
-
-
-            $membershipNumber = 'CBD-' . now()->format('Ymd') . '-' . ($last_number + 1);
-
-            $user->membership_number = $membershipNumber;
-        } else {
-            $membershipNumber = $user->membership_number;
-        }
-
-        $user->save();
-        $registration->save();
 
         return response()->json([
             'message' => 'approve user activation success',
@@ -163,33 +166,36 @@ class UserController extends Controller
         }
 
         $user = User::findOrFail($user_id);
-
-        $checked = $request->input('checked');
-        $checked_decode = json_decode($checked, true);
-
         $registration = Registration::where('user_id', $user->id)->first();
 
-        if (!$registration) {
-            return response()->json([
-                "message" => "registration not found"
-            ], 404);
-        }
+        try {
+            $checked = $request->input('checked');
+            $checked_decode = json_decode($checked, true);
 
-        foreach ($checked_decode as $key => $is_checked) {
-            $registration_detail = RegistrationFormDetail::where('registration_id', $registration->id)
-                ->where('key', $key)
-                ->with('document')
-                ->first();
-
-            try {
-                $document = $registration_detail->document;
-                $document->update(['is_checked' => $is_checked]);
-            } catch (\Throwable $th) {
-                return response()->json([
-                    'message' => 'failed to checklist the documents',
-                    'errors' => $th->getMessage()
-                ]);
+            if ($checked_decode === null) {
+                throw new Exception("please provide a valid json");
             }
+
+            if (!$registration) {
+                return response()->json([
+                    "message" => "registration not found"
+                ], 404);
+            }
+
+            foreach ($checked_decode as $key => $is_checked) {
+                $registration_detail = RegistrationFormDetail::where('registration_id', $registration->id)
+                    ->where('key', $key)
+                    ->with('document')
+                    ->first();
+
+            $document = $registration_detail->document;
+            $document->update(['is_checked' => $is_checked]);
+            }
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'failed to checklist the documents',
+                'errors' => $th->getMessage()
+            ]);
         }
 
         try {
@@ -209,8 +215,7 @@ class UserController extends Controller
         ]);
     }
 
-    public function userList(Request $request)
-    {
+    public function userList(Request $request) {
         $loginUser = Auth::user();
         $users = User::select('id', 'email', 'role_id')
             ->where('role_id', '<', $loginUser->role_id)
@@ -219,8 +224,7 @@ class UserController extends Controller
         return response()->json($users);
     }
 
-    public function addUser(Request $request)
-    {
+    public function addUser(Request $request) {
         $validator = Validator::make($request->all(), [
             'email' => 'required',
             'role_id' => 'required',
@@ -247,8 +251,7 @@ class UserController extends Controller
         return response()->json($newUser);
     }
 
-    public function updateUser(Request $request, $user_id)
-    {
+    public function updateUser(Request $request, $user_id) {
         $user = User::findOrFail($user_id);
 
         $validator = Validator::make($request->all(), [
@@ -261,9 +264,9 @@ class UserController extends Controller
         }
 
         $updated = $user->update([
-                'email' => $request->email,
-                'role_id' => $request->role_id,
-            ]);
+            'email' => $request->email,
+            'role_id' => $request->role_id,
+        ]);
 
         if ($request->password) {
             $updated = $user->update([
@@ -298,10 +301,10 @@ class UserController extends Controller
         ]);
     }
 
-    public function profile(Request $request)
-    {
+    public function profile(Request $request) {
         try {
-            $user = Auth::user();
+            $user = User::findOrFail(Auth::user()->id);
+
             return response()->json([
                 'user' => $user->only('id', 'email', 'role_id', 'status'),
                 'biodata' => $user->biodata,
