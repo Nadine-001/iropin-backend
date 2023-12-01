@@ -25,8 +25,8 @@ class UserController extends Controller
                 return [
                     'user' => $user->only('id', 'email', 'role_id', 'membership_number'),
                     'name' => $user->biodata ? $user->biodata->name : null,
-                    'city' => $user->office ? $user->office->office_regency_city : null,
-                    'office' => $user->office ? $user->office->office_name : null,
+                    'office_regency_city' => $user->office ? $user->office->office_regency_city : null,
+                    'office_name' => $user->office ? $user->office->office_name : null,
                     'status' => $user->registration ? $user->registration->status : null,
                 ];
             });
@@ -306,6 +306,7 @@ class UserController extends Controller
             $user = User::findOrFail(Auth::user()->id);
 
             return response()->json([
+
                 'user' => $user->only('id', 'email', 'role_id', 'status'),
                 'biodata' => $user->biodata,
                 'address' => $user->address,

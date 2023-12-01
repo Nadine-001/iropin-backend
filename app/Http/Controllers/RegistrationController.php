@@ -70,7 +70,7 @@ class RegistrationController extends Controller
             $address = Address::create([
                 'user_id' => $user->id,
                 'address' => $request->address,
-                'province' => $request->province,
+                'province' => 'JAWA TENGAH',
                 'regency_city' => $request->regency_city,
                 'telephone' => $request->telephone,
                 'zip_code' => $request->zip_code,
@@ -142,6 +142,7 @@ class RegistrationController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
+            'message' => 'Registration success! Below here is your data :',
             'data' => $user,
             'biodata' => $biodata,
             'address' => $address,
@@ -150,6 +151,34 @@ class RegistrationController extends Controller
             'files' => $files,
             'access_token' => $token,
             'token_type' => 'Bearer'
+        ]);
+    }
+
+    public function registrationList(Request $request) {
+        $users = User::where('role_id', '<', 50)
+            ->with(['biodata', 'address', 'office', 'registration'])
+            ->get();
+
+        try {
+            $user_data = $users->map(function ($registration) {
+                return [
+                    'registration' => [
+                        'created_at' => $registration->created_at->toDateString(),
+                        'name' => $registration->biodata ? $registration->biodata->name : null,
+                        'NIK' => $registration->biodata ? $registration->biodata->nik : null,
+                        'status' => $registration->registration->status,
+                    ],
+                ];
+            });
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'failed to get registration list',
+                'errors' => $th->getMessage()
+            ]);
+        }
+
+        return response()->json([
+            'registration' => $user_data
         ]);
     }
 }
