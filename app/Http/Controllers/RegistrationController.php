@@ -31,7 +31,6 @@ class RegistrationController extends Controller
             'publish_date' => 'required',
             'exp_date' => 'required',
             'address' => 'required|string',
-            'province' => 'required',
             'institution' => 'required|string',
             'office_name' => 'required',
             'employment_status' => 'required',
@@ -70,7 +69,7 @@ class RegistrationController extends Controller
             $address = Address::create([
                 'user_id' => $user->id,
                 'address' => $request->address,
-                'province' => 'JAWA TENGAH',
+                'province' => 'Jawa Tengah',
                 'regency_city' => $request->regency_city,
                 'telephone' => $request->telephone,
                 'zip_code' => $request->zip_code,

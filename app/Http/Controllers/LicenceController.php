@@ -39,7 +39,7 @@ class LicenceController extends Controller
             if ($request->file('files')) {
                 foreach($request->file('files') as $key => $value)
                 {
-                    $key = "doc" . $request->licence_type . "_" . $count;
+                    $key = "doc_" . $request->licence_type . "_" . $count;
                     $ext = $value->getClientOriginalExtension();
                     $file_name = time() . " - " . $value->getClientOriginalName();
                     $file_name = str_replace(' ', '', $file_name);
@@ -86,6 +86,7 @@ class LicenceController extends Controller
         $licence_data = $licences->map(function ($licence) {
             return [
                 'licence' => [
+                    'licence_id' => $licence->id,
                     'created_at' => $licence->created_at->toDateString(),
                     'licence_type' => $licence->licence_type,
                     'name' => $licence->name,
@@ -109,6 +110,7 @@ class LicenceController extends Controller
                 return [
                     'file_name' => $file->val,
                     'file_path' => $file->file->path,
+                    'key' => $file->key,
                 ];
             });
         } catch (\Throwable $th) {

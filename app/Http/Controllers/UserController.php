@@ -53,6 +53,7 @@ class UserController extends Controller
             $document_data = [
                 'document_name' => $registration_detail->val,
                 'document_path' => $registration_detail->document->path,
+                'key' => $registration_detail->key,
             ];
 
             return response()->json([
@@ -306,8 +307,7 @@ class UserController extends Controller
             $user = User::findOrFail(Auth::user()->id);
 
             return response()->json([
-
-                'user' => $user->only('id', 'email', 'role_id', 'status'),
+                'user' => $user->only('id', 'email', 'role_id', 'status', 'membership_number'),
                 'biodata' => $user->biodata,
                 'address' => $user->address,
                 'education' => $user->education,

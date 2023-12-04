@@ -26,21 +26,23 @@ class WebinarController extends Controller
         }
 
         try {
+            $poster  = null;
             if ($request->file('poster')){
                 $poster = $request->file('poster');
 
                 $file_name = time() . " - " . $poster->getClientOriginalName();
                 $file_name = str_replace(' ', '', $file_name);
-                $path_poster = asset("uploads/Webinar/" . $file_name);
+                $path_poster = asset("public/uploads/Webinar/" . $file_name);
                 $poster->move(public_path('uploads/Webinar'), $file_name);
             }
 
+            $materi  = null;
             if ($request->file('materi')){
                 $materi = $request->file('materi');
 
                 $file_name = time() . " - " . $materi->getClientOriginalName();
                 $file_name = str_replace(' ', '', $file_name);
-                $path_materi = asset("uploads/Webinar/" . $file_name);
+                $path_materi = asset("public/uploads/Webinar/" . $file_name);
                 $materi->move(public_path('uploads/Webinar'), $file_name);
             }
 
@@ -51,8 +53,8 @@ class WebinarController extends Controller
                 'price' => $request->price,
                 'place' => $request->place,
                 'description' => $request->description,
-                'poster' => $path_poster,
-                'materi' => $path_materi,
+                'poster' => $poster ? $path_poster : null,
+                'materi' => $materi ? $path_materi : null,
                 'link' => $request->link,
             ]);
         } catch (\Throwable $th) {
@@ -107,6 +109,7 @@ class WebinarController extends Controller
             $participant_data = $participants->map(function ($participant) {
                 return [
                     'participant' => [
+                        'participant_id' => $participant->id,
                         'created_at' => $participant->created_at->toDateString(),
                         'name' => $participant->user->biodata->name,
                         'title' => $participant->webinar->title,
