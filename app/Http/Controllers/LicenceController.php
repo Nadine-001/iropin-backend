@@ -115,7 +115,7 @@ class LicenceController extends Controller
             });
         } catch (\Throwable $th) {
             return response()->json([
-                'message' => 'failed to get licence list',
+                'message' => 'failed to get file list',
                 'errors' => $th->getMessage()
             ]);
         }

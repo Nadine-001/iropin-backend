@@ -180,4 +180,37 @@ class RegistrationController extends Controller
             'registration' => $user_data
         ]);
     }
+
+    public function registrationListDetail(Request $request, $user_id) {
+        $user = User::findOrFail($user_id);
+
+        $registration = Registration::where('user_id', $user->id)->firstOrFail();
+
+        $registration_detail = RegistrationFormDetail::where('registration_id', $registration->id)
+            ->with('document')
+            ->get();
+
+        try {
+            $document_data = $registration_detail->map(function ($registration_detail) {
+                return [
+                    'document_name' => $registration_detail->val,
+                    'document_path' => $registration_detail->document->path,
+                    'key' => $registration_detail->key,
+                ];
+            });
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'failed to get document list',
+                'errors' => $th->getMessage()
+            ]);
+        }
+
+        return response()->json([
+            'name' => $user->biodata->name,
+            'nik' => $user->biodata->NIK,
+            'address' => $user->address->address,
+            'office_regency_city' => $user->office->office_regency_city,
+            'document_data' => $document_data,
+        ]);
+    }
 }

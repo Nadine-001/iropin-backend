@@ -46,7 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/getUsers', [UserController::class, 'getUsers']);
         Route::get('/getUsers/{user_id}', [UserController::class, 'getUserDetail']);
         Route::get('/registrationList', [RegistrationController::class, 'registrationList']);
-        Route::get('/registrationList/{user_id}', [RegistrationController::class, 'registrationList']);
+        Route::get('/registrationList/{user_id}', [RegistrationController::class, 'registrationListDetail']);
         Route::post('/validateRegistration/{user_id}', [UserController::class, 'validateRegistration']);
         Route::post('/declineRegistration/{licence_id}', [UserController::class, 'declineRegistration']);
 
