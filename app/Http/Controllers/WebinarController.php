@@ -96,7 +96,20 @@ class WebinarController extends Controller
         try {
             $webinar_data = $webinars->map(function ($webinar) {
                 return [
-                    'webinar' => $webinar->only('id', 'title', 'date', 'speaker', 'place', 'materi', 'link', 'poster', 'materi', 'price', 'description')
+                    'webinar' => [
+                        'webinar_id' => $webinar->id,
+                        'tile' => $webinar->tile,
+                        'date' => $webinar->date,
+                        'speaker' => $webinar->speaker,
+                        'place' => $webinar->place,
+                        'materi' => $webinar->materi,
+                        'link' => $webinar->link,
+                        'poster' => $webinar->poster,
+                        'materi' => $webinar->materi,
+                        'price' => $webinar->price,
+                        'description' => $webinar->description,
+                        // $webinar->only('title', 'date', 'speaker', 'place', 'materi', 'link', 'poster', 'materi', 'price', 'description')
+                    ],
                 ];
             });
         } catch (\Throwable $th) {
