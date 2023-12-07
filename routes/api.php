@@ -6,6 +6,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LicenceController;
 use App\Http\Controllers\LicenceFormDetailController;
 use App\Http\Controllers\RegistrationController;
+use App\Http\Controllers\StatisticController;
 use App\Http\Controllers\WebinarController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,7 @@ Route::post('/register', [RegistrationController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/forgotPassword', [UserController::class, 'forgotPassword']);
     Route::get('/getUserProfile', [UserController::class, 'profile']);
     Route::put('/updateProfile', [AuthController::class, 'update']);
     // Route::put('/updateUsers/{user_id}', [UserController::class, 'update']);
@@ -61,5 +63,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/participantList/{participant_id}', [WebinarController::class, 'participantListDetail']);
         Route::post('/validateParticipant/{participant_id}', [WebinarController::class, 'validateParticipant']);
         Route::post('/declineParticipant/{participant_id}', [WebinarController::class, 'declineParticipant']);
+
+        Route::get('/getTotalParticipant', [WebinarController::class, 'getTotalParticipant']);
+        Route::get('/getMemberStatistic', [StatisticController::class, 'getMemberStatistic']);
+        Route::get('/getVerificationStatistic', [StatisticController::class, 'getVerificationStatistic']);
+        Route::get('/getEmployeeStatistic', [StatisticController::class, 'getEmployeeStatistic']);
     });
 });

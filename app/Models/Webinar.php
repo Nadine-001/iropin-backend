@@ -27,8 +27,8 @@ class Webinar extends Model
         'link',
     ];
 
-    public function licence_form_detail(): HasMany
+    public function participants(): HasMany
     {
-        return $this->hasMany(LicenceFormDetail::class);
+        return $this->hasMany(Participant::class);
     }
 }

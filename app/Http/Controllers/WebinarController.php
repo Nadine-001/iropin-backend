@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Participant;
 use App\Models\Webinar;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 
@@ -32,7 +33,7 @@ class WebinarController extends Controller
 
                 $file_name = time() . " - " . $poster->getClientOriginalName();
                 $file_name = str_replace(' ', '', $file_name);
-                $path_poster = asset("public/uploads/Webinar/" . $file_name);
+                $path_poster = asset("uploads/Webinar/" . $file_name);
                 $poster->move(public_path('uploads/Webinar'), $file_name);
             }
 
@@ -42,7 +43,7 @@ class WebinarController extends Controller
 
                 $file_name = time() . " - " . $materi->getClientOriginalName();
                 $file_name = str_replace(' ', '', $file_name);
-                $path_materi = asset("public/uploads/Webinar/" . $file_name);
+                $path_materi = asset("uploads/Webinar/" . $file_name);
                 $materi->move(public_path('uploads/Webinar'), $file_name);
             }
 
@@ -69,10 +70,28 @@ class WebinarController extends Controller
         ]);
     }
 
-    public function webinarList(Request $request) {
-        $webinars = Webinar::all();
+    public function getTotalParticipant(Request $request)
+    {
+        $webinars = Webinar::select('id', 'title')
+            ->withCount([
+                'participants as verified_participants' => function (Builder $query) {
+                    $query->where('status', 1);
+                },
+                'participants as total_participant'
+            ])
+            ->get();
 
-        return response()->json($webinars);
+        return response()->json([
+            'webinars' => $webinars
+        ]);
+    }
+
+    public function webinarList(Request $request) {
+        $webinar_data = Webinar::all();
+
+        return response()->json([
+            'webinars' => collect($webinar_data)
+        ]);
     }
 
     public function webinarParticipants(Request $request, $webinar_id) {
