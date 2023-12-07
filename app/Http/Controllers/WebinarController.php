@@ -87,10 +87,27 @@ class WebinarController extends Controller
     }
 
     public function webinarList(Request $request) {
-        $webinar_data = Webinar::all();
+        $webinars = Webinar::all();
+
+        // return response()->json([
+        //     'webinars' => collect($webinar_data)
+        // ]);
+
+        try {
+            $webinar_data = $webinars->map(function ($webinar) {
+                return [
+                    'webinar' => $webinar->only('id', 'title', 'date', 'speaker', 'place', 'materi', 'link', 'poster', 'materi', 'price', 'description')
+                ];
+            });
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'failed to get webinar list',
+                'errors' => $th->getMessage()
+            ]);
+        }
 
         return response()->json([
-            'webinars' => collect($webinar_data)
+            'webinar' => $webinar_data
         ]);
     }
 
