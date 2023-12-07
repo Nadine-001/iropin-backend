@@ -16,11 +16,11 @@ return new class extends Migration
             $table->string('title');
             $table->date('date');
             $table->string('speaker');
-            $table->string('price');
+            $table->float('price', 6, 2);
             $table->string('place');
             $table->string('description')->nullable();
             $table->string('poster');
-            $table->string('theme');
+            $table->string('materi');
             $table->string('link');
             $table->timestamps();
         });

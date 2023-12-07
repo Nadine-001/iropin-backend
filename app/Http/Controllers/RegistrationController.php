@@ -162,9 +162,10 @@ class RegistrationController extends Controller
             $user_data = $users->map(function ($registration) {
                 return [
                     'registration' => [
+                        'user_id' => $registration->id,
                         'created_at' => $registration->created_at->toDateString(),
                         'name' => $registration->biodata ? $registration->biodata->name : null,
-                        'NIK' => $registration->biodata ? $registration->biodata->nik : null,
+                        'NIK' => $registration->biodata ? $registration->biodata->NIK : null,
                         'status' => $registration->registration->status,
                     ],
                 ];

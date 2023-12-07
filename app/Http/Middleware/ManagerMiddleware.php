@@ -10,7 +10,7 @@ class ManagerMiddleware
 {
     public function handle($request, Closure $next)
     {
-        // Pemeriksaan role_id untuk operator
+        // Pemeriksaan role_id untuk manajer
         if ($request->user() && $request->user()->role_id >= 90) {
             return $next($request);
         }

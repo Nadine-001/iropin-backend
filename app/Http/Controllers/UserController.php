@@ -216,13 +216,19 @@ class UserController extends Controller
         ]);
     }
 
+    public function forgotPassword(Request $request) {
+
+    }
+
     public function userList(Request $request) {
         $loginUser = Auth::user();
-        $users = User::select('id', 'email', 'role_id')
+        $user_data = User::select('id', 'email', 'role_id')
             ->where('role_id', '<', $loginUser->role_id)
             ->get();
 
-        return response()->json($users);
+        return response()->json([
+            'user' => $user_data
+        ]);
     }
 
     public function addUser(Request $request) {
@@ -249,7 +255,10 @@ class UserController extends Controller
             ], 500);
         }
 
-        return response()->json($newUser);
+        return response()->json([
+            "message" => "user added successfully",
+            "newUser" => $newUser,
+        ]);
     }
 
     public function updateUser(Request $request, $user_id) {
