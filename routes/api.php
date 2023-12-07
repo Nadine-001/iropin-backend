@@ -32,8 +32,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::put('/updateUsers/{user_id}', [UserController::class, 'update']);
 
     Route::post('/requestLicence', [LicenceController::class, 'requestLicence']);
-    Route::post('/webinarRegistration/{webinar_id}', [InvoiceController::class, 'webinarRegistration']);
     Route::get('/webinarList', [WebinarController::class, 'webinarList']);
+    Route::get('/webinarList/{webinar_id}', [WebinarController::class, 'webinarListDetail']);
+    Route::post('/webinarRegistration/{webinar_id}', [InvoiceController::class, 'webinarRegistration']);
 
     Route::post('/logout', [AuthController::class, 'logout']);
 

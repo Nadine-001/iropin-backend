@@ -98,7 +98,7 @@ class WebinarController extends Controller
                 return [
                     'webinar' => [
                         'webinar_id' => $webinar->id,
-                        'tile' => $webinar->tile,
+                        'title' => $webinar->title,
                         'date' => $webinar->date,
                         'speaker' => $webinar->speaker,
                         'place' => $webinar->place,
@@ -121,6 +121,20 @@ class WebinarController extends Controller
 
         return response()->json([
             'webinar' => $webinar_data
+        ]);
+    }
+
+    public function webinarListDetail(Request $request, $webinar_id) {
+        $webinar = Webinar::findOrFail($webinar_id);
+
+        if (!$webinar) {
+            return response()->json([
+                "message" => "webinar not found"
+            ], 404);
+        }
+
+        return response()->json([
+            'title' => $webinar->title,
         ]);
     }
 
