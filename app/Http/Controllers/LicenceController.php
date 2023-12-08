@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Validator;
 
 class LicenceController extends Controller
 {
-    function requestLicence(Request $request) {
+    function requestLicence(Request $request)
+    {
         $user = Auth::user();
 
         $validator = Validator::make($request->all(), [
@@ -37,13 +38,12 @@ class LicenceController extends Controller
             $count = 1;
             $files = [];
             if ($request->file('files')) {
-                foreach($request->file('files') as $key => $value)
-                {
-                    $key = "doc_" . $request->licence_type . "_" . $count;
+                foreach ($request->file('files') as $key => $value) {
+                    $key = "doc_" . $request->licence_type . "_" . $key;
                     $ext = $value->getClientOriginalExtension();
                     $file_name = time() . " - " . $value->getClientOriginalName();
                     $file_name = str_replace(' ', '', $file_name);
-                    $path = asset("uploads/".$file_name);
+                    $path = asset("uploads/" . $file_name);
                     $value->move(public_path('uploads'), $file_name);
 
                     $file = File::create([
@@ -80,7 +80,8 @@ class LicenceController extends Controller
         ]);
     }
 
-    function licenceList(Request $request) {
+    function licenceList(Request $request)
+    {
         $licences = Licence::all();
 
         $licence_data = $licences->map(function ($licence) {
@@ -99,7 +100,8 @@ class LicenceController extends Controller
         ]);
     }
 
-    function licenceListDetail(Request $request, $licence_id) {
+    function licenceListDetail(Request $request, $licence_id)
+    {
         $licence = Licence::findOrFail($licence_id);
         $file = LicenceFormDetail::where('licence_id', $licence->id)
             ->with('file')
@@ -129,7 +131,8 @@ class LicenceController extends Controller
         ]);
     }
 
-    function validateLicence(Request $request, $licence_id) {
+    function validateLicence(Request $request, $licence_id)
+    {
         $licence = Licence::findOrFail($licence_id);
 
         try {
@@ -160,7 +163,8 @@ class LicenceController extends Controller
         ]);
     }
 
-    function declineLicence(Request $request, $licence_id) {
+    function declineLicence(Request $request, $licence_id)
+    {
         $validator = Validator::make($request->all(), [
             'note' => 'required|string|max:255',
         ]);
@@ -199,6 +203,26 @@ class LicenceController extends Controller
 
         return response()->json([
             'message' => 'participant denied'
+        ]);
+    }
+
+    public function approvalList(Request $request)
+    {
+        $approvals = Licence::where('status', 1)->get();
+
+        $approval_data = $approvals->map(function ($approval) {
+            return [
+                'approvals' => [
+                    'licence_id' => $approval->id,
+                    'licence_type' => $approval->licence_type,
+                    'name' => $approval->name,
+                    'membership_number' => $approval->membership_number,
+                ],
+            ];
+        });
+
+        return response()->json([
+            'approval_data' => $approval_data
         ]);
     }
 }

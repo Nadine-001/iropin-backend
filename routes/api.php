@@ -43,6 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/addUser', [UserController::class, 'addUser']);
         Route::put('/updateUser/{user_id}', [UserController::class, 'updateUser']);
         Route::delete('/deleteUser/{user_id}', [UserController::class, 'deleteUser']);
+        Route::get('/approvalList', [LicenceController::class, 'approvalList']);
     });
 
     Route::middleware('operator')->group(function () {
