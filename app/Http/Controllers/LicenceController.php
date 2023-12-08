@@ -236,10 +236,10 @@ class LicenceController extends Controller
 
     public function showApproval(Request $request, $licence_id)
     {
-        $licence_type = Licence::findOrFail($licence_id)->value('licence_type');
+        $licence = Licence::findOrFail($licence_id);
+        $licence_type = $licence->licence_type;
 
         $key = null;
-
         try {
             if ($licence_type == 'Pencabutan SIP-RO') {
                 $key = 'sip-ro';
@@ -255,12 +255,13 @@ class LicenceController extends Controller
                 $key = 'sip';
             }
 
-            $file_id = LicenceFormDetail::where('licence_id', $licence_id)
+            $file_id = LicenceFormDetail::where('licence_id', $licence->id)
                 ->where('key', $key)
                 ->value('file_id');
 
             $file = File::findOrFail($file_id);
             $file_path = $file->path;
+            
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'failed to get the file',
