@@ -44,6 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/updateUser/{user_id}', [UserController::class, 'updateUser']);
         Route::delete('/deleteUser/{user_id}', [UserController::class, 'deleteUser']);
         Route::get('/approvalList', [LicenceController::class, 'approvalList']);
+        Route::get('/showApproval/{licence_id}', [LicenceController::class, 'showApproval']);
     });
 
     Route::middleware('operator')->group(function () {

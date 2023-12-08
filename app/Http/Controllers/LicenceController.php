@@ -210,19 +210,66 @@ class LicenceController extends Controller
     {
         $approvals = Licence::where('status', 1)->get();
 
-        $approval_data = $approvals->map(function ($approval) {
-            return [
-                'approvals' => [
-                    'licence_id' => $approval->id,
-                    'licence_type' => $approval->licence_type,
-                    'name' => $approval->name,
-                    'membership_number' => $approval->membership_number,
-                ],
-            ];
-        });
+        try {
+            $approval_data = $approvals->map(function ($approval) {
+                return [
+                    'approvals' => [
+                        'licence_id' => $approval->id,
+                        'licence_type' => $approval->licence_type,
+                        'name' => $approval->name,
+                        'membership_number' => $approval->membership_number,
+                    ],
+                ];
+            });
+
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'failed to list the approval',
+                'errors' => $th->getMessage()
+            ], 404);
+        }
 
         return response()->json([
             'approval_data' => $approval_data
+        ]);
+    }
+
+    public function showApproval(Request $request, $licence_id)
+    {
+        $licence_type = Licence::findOrFail($licence_id)->value('licence_type');
+
+        $key = null;
+
+        try {
+            if ($licence_type == 'Pencabutan SIP-RO') {
+                $key = 'sip-ro';
+            } else if ($licence_type == 'Perpanjangan STR') {
+                $key = 'str';
+            } else if ($licence_type == 'Rekomendasi BPJS') {
+                $key = 'bpjs';
+            } else if ($licence_type == 'Pengajuan SIPO') {
+                $key = 'sipo';
+            } else if ($licence_type == 'Permohonan Pindah Cabang') {
+                $key = 'pindah';
+            } else if ($licence_type == 'Pengajuan SIP') {
+                $key = 'sip';
+            }
+
+            $file_id = LicenceFormDetail::where('licence_id', $licence_id)
+                ->where('key', $key)
+                ->value('file_id');
+
+            $file = File::findOrFail($file_id);
+            $file_path = $file->path;
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'failed to get the file',
+                'errors' => $th->getMessage()
+            ], 404);
+        }
+
+        return response()->json([
+            'file_path' => $file_path,
         ]);
     }
 }
