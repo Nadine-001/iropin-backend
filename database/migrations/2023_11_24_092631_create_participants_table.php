@@ -17,6 +17,8 @@ return new class extends Migration
             $table->foreign('user_id')->references('id')->on('users');
             $table->foreignId('webinar_id')->index();
             $table->foreign('webinar_id')->references('id')->on('webinars');
+            $table->string('key');
+            $table->string('val');
             $table->foreign('invoice_id')->references('id')->on('invoices');
             $table->boolean('status')->nullable()->default(0);
             $table->string('note')->nullable();

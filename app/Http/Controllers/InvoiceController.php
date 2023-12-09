@@ -55,6 +55,8 @@ class InvoiceController extends Controller
                     'invoice_id' => $invoice->id,
                     'user_id' => $user->id,
                     'webinar_id' => $webinar->id,
+                    'key' => 'invoice',
+                    'val' => $file_name,
                     'file_id' => $invoice->id,
                 ]);
             }

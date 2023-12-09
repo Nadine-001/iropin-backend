@@ -18,6 +18,8 @@ class Participant extends Model
     protected $fillable = [
         'user_id',
         'webinar_id',
+        'key',
+        'val',
         'invoice_id',
         'status',
         'note'

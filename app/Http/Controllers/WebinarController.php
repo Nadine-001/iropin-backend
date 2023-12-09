@@ -206,6 +206,7 @@ class WebinarController extends Controller
         $invoice_data = [
                 'file_name' => $invoice->file_name,
                 'file_path' => $invoice->path,
+                'key' => $participant->key,
         ];
 
         return response()->json([
