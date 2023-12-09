@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('val');
             $table->foreignId('file_id')->index();
             $table->foreign('file_id')->references('id')->on('files');
+            $table->boolean('is_forward_manager')->nullable()->default(0);
             $table->timestamps();
         });
     }

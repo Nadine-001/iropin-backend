@@ -19,7 +19,8 @@ class LicenceFormDetail extends Model
         'key',
         'val',
         'file_id',
-        'licence_id'
+        'licence_id',
+        'is_forward_manager',
     ];
 
     public function licence(): BelongsTo

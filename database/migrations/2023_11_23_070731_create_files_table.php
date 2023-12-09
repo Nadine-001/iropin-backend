@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('ext');
             $table->string('file_name');
             $table->boolean('is_checked')->nullable()->default(0);
+            $table->boolean('is_assigned')->nullable()->default(0);
             $table->timestamps();
         });
     }

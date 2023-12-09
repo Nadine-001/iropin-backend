@@ -133,27 +133,30 @@ class LicenceController extends Controller
 
     function validateLicence(Request $request, $licence_id)
     {
+        $key = $request->key;
+        try {
+            LicenceFormDetail::where('licence_id', $licence_id)
+                ->where('key', $key)
+                ->update(['is_forward_manager' => 1]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'failed to get the key file for manager',
+                'errors' => $th->getMessage()
+            ], 400);
+        }
+
         $licence = Licence::findOrFail($licence_id);
 
         try {
-            $checked = $request->input('checked');
-            $checked_decode = json_decode($checked, true);
-
-            foreach ($checked_decode as $fileName => $is_checked) {
-                $licence_detail = LicenceFormDetail::where('licence_id', $licence->id)
-                    ->whereHas('file', function ($query) use ($fileName) {
-                        $query->where('file_name', $fileName);
-                    })
-                    ->firstOrFail();
-
-                $file = $licence_detail->file;
-                $file->update(['is_checked' => $is_checked]);
-            }
+            File::whereHas('licence_form_detail', function ($query) use ($licence) {
+                $query->where('licence_id', $licence->id);
+            })
+                ->update(['is_checked' => 1]);
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'failed to checklist the files',
                 'errors' => $th->getMessage()
-            ]);
+            ], 400);
         }
 
         $licence->update(['status' => 1]);
@@ -174,28 +177,6 @@ class LicenceController extends Controller
         }
 
         $licence = Licence::findOrFail($licence_id);
-
-        try {
-            $checked = $request->input('checked');
-            $checked_decode = json_decode($checked, true);
-
-            foreach ($checked_decode as $fileName => $is_checked) {
-                $licence_detail = LicenceFormDetail::where('licence_id', $licence->id)
-                    ->whereHas('file', function ($query) use ($fileName) {
-                        $query->where('file_name', $fileName);
-                    })
-                    ->firstOrFail();
-
-                $file = $licence_detail->file;
-                $file->update(['is_checked' => $is_checked]);
-            }
-        } catch (\Throwable $th) {
-            return response()->json([
-                'message' => 'failed to checklist the files',
-                'errors' => $th->getMessage()
-            ]);
-        }
-
         $licence->update([
             'status' => 2,
             'note' => $request->note
@@ -221,7 +202,6 @@ class LicenceController extends Controller
                     ],
                 ];
             });
-
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'failed to list the approval',
@@ -236,32 +216,13 @@ class LicenceController extends Controller
 
     public function showApproval(Request $request, $licence_id)
     {
-        $licence = Licence::findOrFail($licence_id);
-        $licence_type = $licence->licence_type;
-
-        $key = null;
-        try {
-            if ($licence_type == 'Pencabutan SIP-RO') {
-                $key = 'sip-ro';
-            } else if ($licence_type == 'Perpanjangan STR') {
-                $key = 'str';
-            } else if ($licence_type == 'Rekomendasi BPJS') {
-                $key = 'bpjs';
-            } else if ($licence_type == 'Pengajuan SIPO') {
-                $key = 'sipo';
-            } else if ($licence_type == 'Permohonan Pindah Cabang') {
-                $key = 'pindah';
-            } else if ($licence_type == 'Pengajuan SIP') {
-                $key = 'sip';
-            }
-
-            $file_id = LicenceFormDetail::where('licence_id', $licence->id)
-                ->where('key', $key)
+        $file_id = LicenceFormDetail::where('licence_id', $licence_id)
+                ->where('is_forward_manager', 1)
                 ->value('file_id');
 
+        try {
             $file = File::findOrFail($file_id);
             $file_path = $file->path;
-            
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'failed to get the file',
