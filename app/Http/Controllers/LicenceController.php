@@ -177,13 +177,21 @@ class LicenceController extends Controller
         }
 
         $licence = Licence::findOrFail($licence_id);
-        $licence->update([
-            'status' => 2,
-            'note' => $request->note
-        ]);
+
+        try {
+            $licence->update([
+                'status' => 2,
+                'note' => $request->note
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'failed to deny licence',
+                'errors' => $th->getMessage()
+            ], 400);
+        }
 
         return response()->json([
-            'message' => 'participant denied'
+            'message' => 'deny licence success'
         ]);
     }
 
@@ -217,8 +225,8 @@ class LicenceController extends Controller
     public function showApproval(Request $request, $licence_id)
     {
         $file_id = LicenceFormDetail::where('licence_id', $licence_id)
-                ->where('is_forward_manager', 1)
-                ->value('file_id');
+            ->where('is_forward_manager', 1)
+            ->value('file_id');
 
         try {
             $file = File::findOrFail($file_id);

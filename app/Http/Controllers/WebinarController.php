@@ -10,7 +10,8 @@ use Illuminate\Http\Request;
 
 class WebinarController extends Controller
 {
-    public function addWebinar(Request $request) {
+    public function addWebinar(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'title' => 'required',
             'date' => 'required',
@@ -28,23 +29,23 @@ class WebinarController extends Controller
 
         try {
             $poster  = null;
-            if ($request->file('poster')){
+            if ($request->file('poster')) {
                 $poster = $request->file('poster');
 
                 $file_name = time() . " - " . $poster->getClientOriginalName();
                 $file_name = str_replace(' ', '', $file_name);
                 $path_poster = asset("uploads/Webinar/" . $file_name);
-                $poster->move(public_path('uploads/Webinar'), $file_name);
+                $poster->move(public_path('uploads/Webinar/'), $file_name);
             }
 
             $materi  = null;
-            if ($request->file('materi')){
+            if ($request->file('materi')) {
                 $materi = $request->file('materi');
 
                 $file_name = time() . " - " . $materi->getClientOriginalName();
                 $file_name = str_replace(' ', '', $file_name);
                 $path_materi = asset("uploads/Webinar/" . $file_name);
-                $materi->move(public_path('uploads/Webinar'), $file_name);
+                $materi->move(public_path('uploads/Webinar/'), $file_name);
             }
 
             $webinar = Webinar::create([
@@ -86,7 +87,8 @@ class WebinarController extends Controller
         ]);
     }
 
-    public function webinarList(Request $request) {
+    public function webinarList(Request $request)
+    {
         $webinars = Webinar::all();
 
         // return response()->json([
@@ -124,7 +126,8 @@ class WebinarController extends Controller
         ]);
     }
 
-    public function webinarListDetail(Request $request, $webinar_id) {
+    public function webinarListDetail(Request $request, $webinar_id)
+    {
         $webinar = Webinar::findOrFail($webinar_id);
 
         if (!$webinar) {
@@ -138,7 +141,8 @@ class WebinarController extends Controller
         ]);
     }
 
-    public function webinarParticipants(Request $request, $webinar_id) {
+    public function webinarParticipants(Request $request, $webinar_id)
+    {
         // $participants = Participant::where('webinar_id', $webinar_id)
         //     ->with('user.biodata')
         //     ->get();
@@ -165,7 +169,8 @@ class WebinarController extends Controller
         return response()->json($participant_data);
     }
 
-    public function participantList(Request $request) {
+    public function participantList(Request $request)
+    {
         $participants = Participant::all();
 
         try {
@@ -192,7 +197,8 @@ class WebinarController extends Controller
         ]);
     }
 
-    public function participantListDetail(Request $request, $participant_id) {
+    public function participantListDetail(Request $request, $participant_id)
+    {
         $participant = Participant::with('invoice', 'webinar', 'user')->find($participant_id);
 
         if (!$participant) {
@@ -204,9 +210,9 @@ class WebinarController extends Controller
         $invoice = $participant->invoice;
 
         $invoice_data = [
-                'file_name' => $invoice->file_name,
-                'file_path' => $invoice->path,
-                'key' => $participant->key,
+            'file_name' => $invoice->file_name,
+            'file_path' => $invoice->path,
+            'key' => $participant->key,
         ];
 
         return response()->json([
@@ -214,40 +220,33 @@ class WebinarController extends Controller
             'name' => $participant->user->biodata->name,
             'title' => $participant->webinar->title,
             'date' => $participant->webinar->date,
-            'invoice' => $invoice_data,
+            'invoice_data' => $invoice_data,
         ]);
     }
 
-    public function validateParticipant(Request $request, $participant_id) {
-        $participant = Participant::with('invoice')->find($participant_id);
-
-        $invoice = $participant->invoice;
+    public function validateParticipant(Request $request, $participant_id)
+    {
+        $participant = Participant::with('invoice')->findOrFail($participant_id);
 
         try {
-            $checked = $request->input('checked');
-            $checked_decode = json_decode($checked, true);
-
-            foreach ($checked_decode as $fileName => $is_checked) {
-                $invoice->is_checked = $is_checked;
-            }
+            $invoice = $participant->invoice;
+            $invoice->update(['is_checked' => 1]);
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'failed to checklist the invoice',
                 'errors' => $th->getMessage()
-            ]);
+            ], 400);
         }
 
-        $participant->status = 1;
-
-        $invoice->save();
-        $participant->save();
+        $participant->update(['status' => 1]);
 
         return response()->json([
             'message' => 'participant verified'
         ]);
     }
 
-    public function declineParticipant(Request $request, $participant_id) {
+    public function declineParticipant(Request $request, $participant_id)
+    {
         $validator = Validator::make($request->all(), [
             'note' => 'required|string|max:255',
         ]);
@@ -258,30 +257,20 @@ class WebinarController extends Controller
 
         $participant = Participant::with('invoice')->find($participant_id);
 
-        $invoice = $participant->invoice;
-
         try {
-            $checked = $request->input('checked');
-            $checked_decode = json_decode($checked, true);
-
-            foreach ($checked_decode as $fileName => $is_checked) {
-                $invoice->is_checked = $is_checked;
-            }
+            $participant->update([
+                'status' => 2,
+                'note' => $request->note
+            ]);
         } catch (\Throwable $th) {
             return response()->json([
-                'message' => 'failed to checklist the invoice',
+                'message' => 'failed to deny participant',
                 'errors' => $th->getMessage()
-            ]);
+            ], 400);
         }
 
-        $participant->status = 2;
-        $participant->note = $request->note;
-
-        $invoice->save();
-        $participant->save();
-
         return response()->json([
-            'message' => 'participant denied'
+            'message' => 'deny participant success'
         ]);
     }
 }

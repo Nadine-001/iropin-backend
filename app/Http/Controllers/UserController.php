@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Document;
 use App\Models\Registration;
 use App\Models\RegistrationFormDetail;
 use Illuminate\Http\Request;
@@ -14,7 +15,8 @@ use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
-    public function getUsers(Request $request) {
+    public function getUsers(Request $request)
+    {
         $loginUser = Auth::user();
         $users = User::where('role_id', '<', $loginUser->role_id)
             ->with(['biodata', 'address', 'office', 'registration'])
@@ -40,7 +42,8 @@ class UserController extends Controller
         return response()->json(['user_data' => $user_data]);
     }
 
-    function getUserDetail(Request $request, $user_id) {
+    function getUserDetail(Request $request, $user_id)
+    {
         $user = User::findOrFail($user_id);
 
         $registration = Registration::where('user_id', $user->id)->firstOrFail();
@@ -89,44 +92,33 @@ class UserController extends Controller
         }
     }
 
-    function validateRegistration(Request $request, $user_id) {
+    function validateRegistration(Request $request, $user_id)
+    {
         $user = User::findOrFail($user_id);
 
         $registration = Registration::where('user_id', $user->id)->firstOrFail();
 
         try {
-            $checked = $request->input('checked');
-            $checked_decode = json_decode($checked, true);
-
-            if ($checked_decode === null) {
-                throw new Exception("please provide a valid json");
-            }
-
-            foreach ($checked_decode as $key => $is_checked) {
-                $registration_detail = RegistrationFormDetail::where('registration_id', $registration->id)
-                    ->where('key', $key)
-                    ->with('document')
-                    ->first();
-
-                $document = $registration_detail->document;
-                $document->update(['is_checked' => $is_checked]);
-            }
+            Document::whereHas('registration_detail', function ($query) use ($registration) {
+                $query->where('registration_id', $registration->id);
+            })
+                ->update(['is_checked' => 1]);
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'failed to checklist the documents',
                 'errors' => $th->getMessage()
-            ]);
+            ], 400);
         }
 
         try {
-            $user->status = 1;          // sudah diaktivasi
-            $registration->status = 1;  // sudah diaktivasi
+            $user->update(['status' => 1]);          // sudah diaktivasi
+            $registration->update(['status' => 1]);  // sudah diaktivasi
 
             // generate membership number
             if (!$user->membership_number) {
 
-                $latest_membership_number = User::whereYear('created_at', Carbon::now()->year)
-                    ->whereMonth('created_at', Carbon::now()->month)
+                $latest_membership_number = User::whereYear('updated_at', Carbon::now()->year)
+                    ->whereMonth('updated_at', Carbon::now()->month)
                     ->where('status', 1)
                     ->whereNotNull('membership_number')
                     ->orderBy('membership_number', 'desc')
@@ -137,29 +129,27 @@ class UserController extends Controller
 
                 $membershipNumber = 'CBD-' . now()->format('Ymd') . '-' . ($last_number + 1);
 
-                $user->membership_number = $membershipNumber;
+                $user->update(['membership_number' => $membershipNumber]);
             } else {
                 $membershipNumber = $user->membership_number;
             }
-
-            $user->save();
-            $registration->save();
         } catch (\Throwable $th) {
             return response()->json([
-                'message' => 'failed to change user status',
+                'message' => 'failed to change user status and give membership number',
                 'errors' => $th->getMessage()
-            ]);
+            ], 400);
         }
 
         return response()->json([
             'message' => 'approve user activation success',
-            'access_token' => $membershipNumber,
+            'membership_number' => $membershipNumber,
         ]);
     }
 
-    function declineRegistration(Request $request, $user_id) {
+    function declineRegistration(Request $request, $user_id)
+    {
         $validator = Validator::make($request->all(), [
-            'note' => 'required|string',
+            'note' => 'required|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -170,45 +160,15 @@ class UserController extends Controller
         $registration = Registration::where('user_id', $user->id)->first();
 
         try {
-            $checked = $request->input('checked');
-            $checked_decode = json_decode($checked, true);
-
-            if ($checked_decode === null) {
-                throw new Exception("please provide a valid json");
-            }
-
-            if (!$registration) {
-                return response()->json([
-                    "message" => "registration not found"
-                ], 404);
-            }
-
-            foreach ($checked_decode as $key => $is_checked) {
-                $registration_detail = RegistrationFormDetail::where('registration_id', $registration->id)
-                    ->where('key', $key)
-                    ->with('document')
-                    ->first();
-
-            $document = $registration_detail->document;
-            $document->update(['is_checked' => $is_checked]);
-            }
-        } catch (\Throwable $th) {
-            return response()->json([
-                'message' => 'failed to checklist the documents',
-                'errors' => $th->getMessage()
-            ]);
-        }
-
-        try {
             $registration->update([
                 'status' => 2,
                 'note' => $request->note
             ]);
         } catch (\Throwable $th) {
             return response()->json([
-                'message' => 'failed to change user status',
+                'message' => 'failed to deny user activation',
                 'errors' => $th->getMessage()
-            ]);
+            ], 400);
         }
 
         return response()->json([
@@ -216,11 +176,12 @@ class UserController extends Controller
         ]);
     }
 
-    public function forgotPassword(Request $request) {
-
+    public function forgotPassword(Request $request)
+    {
     }
 
-    public function userList(Request $request) {
+    public function userList(Request $request)
+    {
         $loginUser = Auth::user();
         $user_data = User::select('id', 'email', 'role_id')
             ->where('role_id', '<', $loginUser->role_id)
@@ -231,7 +192,8 @@ class UserController extends Controller
         ]);
     }
 
-    public function addUser(Request $request) {
+    public function addUser(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'email' => 'required',
             'role_id' => 'required',
@@ -261,7 +223,8 @@ class UserController extends Controller
         ]);
     }
 
-    public function updateUser(Request $request, $user_id) {
+    public function updateUser(Request $request, $user_id)
+    {
         $user = User::findOrFail($user_id);
 
         $validator = Validator::make($request->all(), [
@@ -296,7 +259,8 @@ class UserController extends Controller
         ]);
     }
 
-    public function deleteUser(Request $request, $user_id) {
+    public function deleteUser(Request $request, $user_id)
+    {
         $user = User::findOrFail($user_id);
         $deleted = $user->delete();
 
@@ -311,7 +275,8 @@ class UserController extends Controller
         ]);
     }
 
-    public function profile(Request $request) {
+    public function profile(Request $request)
+    {
         try {
             $user = User::findOrFail(Auth::user()->id);
 
