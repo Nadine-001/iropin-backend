@@ -106,8 +106,8 @@ class RegistrationController extends Controller
                     $ext = $value->getClientOriginalExtension();
                     $file_name = time() . " - " . $value->getClientOriginalName();
                     $file_name = str_replace(' ', '', $file_name);
-                    $path = asset("uploads/registrations".$file_name);
-                    $value->move(public_path('uploads/registrations'), $file_name);
+                    $path = asset("uploads/registrations/".$file_name);
+                    $value->move(public_path('uploads/registrations/'), $file_name);
 
                     $document = Document::create([
                         'path' => $path,
@@ -211,6 +211,7 @@ class RegistrationController extends Controller
             'nik' => $user->biodata->NIK,
             'address' => $user->address->address,
             'office_regency_city' => $user->office->office_regency_city,
+            'office_name' => $user->office->office_name,
             'document_data' => $document_data,
         ]);
     }

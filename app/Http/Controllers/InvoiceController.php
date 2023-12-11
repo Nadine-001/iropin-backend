@@ -42,8 +42,8 @@ class InvoiceController extends Controller
                 $ext = $invoice->getClientOriginalExtension();
                 $file_name = time() . " - " . $invoice->getClientOriginalName();
                 $file_name = str_replace(' ', '', $file_name);
-                $path = asset("uploads/invoiceWebinar" . $file_name);
-                $invoice->move(public_path('uploads/invoiceWebinar'), $file_name);
+                $path = asset("uploads/invoiceWebinar/" . $file_name);
+                $invoice->move(public_path('uploads/invoiceWebinar/'), $file_name);
 
                 $invoice = Invoice::create([
                     'path' => $path,
