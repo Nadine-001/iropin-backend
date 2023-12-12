@@ -33,7 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/requestLicence', [LicenceController::class, 'requestLicence']);
     Route::get('/licenceApproved', [LicenceController::class, 'licenceApproved']);
-    Route::post('/showApproved/{licence_id}', [LicenceController::class, 'showApproved']);
+    Route::get('/showApproved/{licence_id}', [LicenceController::class, 'showApproved']);
     Route::get('/webinarList', [WebinarController::class, 'webinarList']);
     Route::get('/webinarList/{webinar_id}', [WebinarController::class, 'webinarListDetail']);
     Route::post('/webinarRegistration/{webinar_id}', [InvoiceController::class, 'webinarRegistration']);

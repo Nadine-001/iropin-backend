@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\File;
 use App\Models\Licence;
 use App\Models\LicenceFormDetail;
+use Illuminate\Contracts\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -104,12 +106,12 @@ class LicenceController extends Controller
     function licenceListDetail(Request $request, $licence_id)
     {
         $licence = Licence::findOrFail($licence_id);
-        $file = LicenceFormDetail::where('licence_id', $licence->id)
+        $files = LicenceFormDetail::where('licence_id', $licence->id)
             ->with('file')
             ->get();
 
         try {
-            $file_data = $file->map(function ($file) {
+            $file_data = $files->map(function ($file) {
                 return [
                     'file_name' => $file->val,
                     'file_path' => $file->file->path,
@@ -280,7 +282,30 @@ class LicenceController extends Controller
         }
 
         return response()->json([
-            'file_path' => $path_licence,
+            'message' => 'success uploaded file',
         ]);
+    }
+
+    public function licenceApproved() {
+        $user = Auth::user();
+
+        $licences = Licence::select('id', 'licence_type')
+        ->where('user_id', $user->id)
+        // ->with(['licence_form_detail.file' => function ($query) {
+        //         $query->where('is_assigned', 1);
+        // }])
+        ->whereHas('licence_form_detail.file', function ($query) {
+                $query->where('is_assigned', 1);
+        })
+        ->get();
+
+        $licence_data = $licences->map(function ($licence) {
+            return [
+                'licence_id' => $licence->id,
+                'licence_type' => $licence->licence_type,
+            ];
+        });
+
+        return response()->json($licence_data);
     }
 }
