@@ -129,7 +129,8 @@ class UserController extends Controller
 
                 $membershipNumber = 'CBD-' . now()->format('Ymd') . '-' . ($last_number + 1);
 
-                $user->update(['membership_number' => $membershipNumber]);
+                $user->membership_number = $membershipNumber;
+                $user->save();
             } else {
                 $membershipNumber = $user->membership_number;
             }

@@ -147,7 +147,9 @@ class WebinarController extends Controller
         //     ->with('user.biodata')
         //     ->get();
 
-        $participants = Participant::where('webinar_id', $webinar_id)->get();
+        $participants = Participant::where('webinar_id', $webinar_id)
+            ->where('status', 1)
+            ->get();
 
         try {
             $participant_data = $participants->map(function ($participant) {
@@ -166,7 +168,9 @@ class WebinarController extends Controller
             ]);
         }
 
-        return response()->json($participant_data);
+        return response()->json( [
+            'participant_data' => $participant_data
+        ]);
     }
 
     public function participantList(Request $request)
