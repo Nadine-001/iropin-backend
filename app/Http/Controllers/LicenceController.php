@@ -91,6 +91,7 @@ class LicenceController extends Controller
                     'created_at' => $licence->created_at->toDateString(),
                     'licence_type' => $licence->licence_type,
                     'name' => $licence->name,
+                    'status' => $licence->status,
                 ],
             ];
         });
@@ -240,6 +241,46 @@ class LicenceController extends Controller
 
         return response()->json([
             'file_path' => $file_path,
+        ]);
+    }
+
+    public function sendApproval(Request $request, $licence_id)
+    {
+        $validator = Validator::make($request->all(), [
+            'licence' => 'required|file',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors());
+        }
+
+        $file_id = LicenceFormDetail::where('licence_id', $licence_id)
+            ->where('is_forward_manager', 1)
+            ->value('file_id');
+
+        try {
+            if ($request->file('licence')) {
+                $licence = $request->file('licence');
+
+                $file_name = time() . " - " . $licence->getClientOriginalName();
+                $file_name = str_replace(' ', '', $file_name);
+                $path_licence = asset("uploads/Approval/" . $file_name);
+                $licence->move(public_path('uploads/Approval/'), $file_name);
+            }
+
+            File::findOrFail($file_id)->update([
+                'path' => $path_licence,
+                'is_assigned' => 1,
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'failed to get the file',
+                'errors' => $th->getMessage()
+            ], 404);
+        }
+
+        return response()->json([
+            'file_path' => $path_licence,
         ]);
     }
 }

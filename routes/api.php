@@ -32,6 +32,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::put('/updateUsers/{user_id}', [UserController::class, 'update']);
 
     Route::post('/requestLicence', [LicenceController::class, 'requestLicence']);
+    Route::get('/licenceApproved', [LicenceController::class, 'licenceApproved']);
+    Route::post('/showApproved/{licence_id}', [LicenceController::class, 'showApproved']);
     Route::get('/webinarList', [WebinarController::class, 'webinarList']);
     Route::get('/webinarList/{webinar_id}', [WebinarController::class, 'webinarListDetail']);
     Route::post('/webinarRegistration/{webinar_id}', [InvoiceController::class, 'webinarRegistration']);
@@ -45,6 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/deleteUser/{user_id}', [UserController::class, 'deleteUser']);
         Route::get('/approvalList', [LicenceController::class, 'approvalList']);
         Route::get('/showApproval/{licence_id}', [LicenceController::class, 'showApproval']);
+        Route::post('/sendApproval/{licence_id}', [LicenceController::class, 'sendApproval']);
     });
 
     Route::middleware('operator')->group(function () {
