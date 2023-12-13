@@ -330,6 +330,8 @@ class LicenceController extends Controller
             ], 404);
         }
 
-        return response()->json($file);
+        return response()->json([
+            'file_path' => $file,
+        ]);
     }
 }
