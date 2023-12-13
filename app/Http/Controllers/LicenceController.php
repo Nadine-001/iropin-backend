@@ -286,26 +286,50 @@ class LicenceController extends Controller
         ]);
     }
 
-    public function licenceApproved() {
+    public function licenceApproved()
+    {
         $user = Auth::user();
 
-        $licences = Licence::select('id', 'licence_type')
-        ->where('user_id', $user->id)
-        // ->with(['licence_form_detail.file' => function ($query) {
-        //         $query->where('is_assigned', 1);
-        // }])
-        ->whereHas('licence_form_detail.file', function ($query) {
-                $query->where('is_assigned', 1);
-        })
-        ->get();
+        try {
+            $licences = Licence::select('id', 'licence_type')
+                ->where('user_id', $user->id)
+                // ->with(['licence_form_detail.file' => function ($query) {
+                //         $query->where('is_assigned', 1);
+                // }])
+                ->whereHas('licence_form_detail.file', function ($query) {
+                    $query->where('is_assigned', 1);
+                })
+                ->get();
 
-        $licence_data = $licences->map(function ($licence) {
-            return [
-                'licence_id' => $licence->id,
-                'licence_type' => $licence->licence_type,
-            ];
-        });
+            $licence_data = $licences->map(function ($licence) {
+                return [
+                    'licence_id' => $licence->id,
+                    'licence_type' => $licence->licence_type,
+                ];
+            });
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'failed to get the licence list',
+                'errors' => $th->getMessage()
+            ], 404);
+        }
 
         return response()->json($licence_data);
+    }
+
+    public function showApproved(Request $request, $licence_id)
+    {
+        $file_id = LicenceFormDetail::findOrFail($licence_id)->value('file_id');
+
+        try {
+            $file = File::where('id', $file_id)->value('path');
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'failed to get the file',
+                'errors' => $th->getMessage()
+            ], 404);
+        }
+
+        return response()->json($file);
     }
 }
