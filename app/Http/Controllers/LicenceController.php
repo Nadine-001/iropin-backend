@@ -319,7 +319,9 @@ class LicenceController extends Controller
 
     public function showApproved(Request $request, $licence_id)
     {
-        $file_id = LicenceFormDetail::findOrFail($licence_id)->value('file_id');
+        $file_id = LicenceFormDetail::where('licence_id', $licence_id)
+            ->where('is_forward_manager', 1)
+            ->value('file_id');
 
         try {
             $file = File::where('id', $file_id)->value('path');
