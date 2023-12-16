@@ -91,10 +91,6 @@ class WebinarController extends Controller
     {
         $webinars = Webinar::all();
 
-        // return response()->json([
-        //     'webinars' => collect($webinar_data)
-        // ]);
-
         try {
             $webinar_data = $webinars->map(function ($webinar) {
                 return [
@@ -104,13 +100,9 @@ class WebinarController extends Controller
                         'date' => $webinar->date,
                         'speaker' => $webinar->speaker,
                         'place' => $webinar->place,
-                        'materi' => $webinar->materi,
-                        'link' => $webinar->link,
                         'poster' => $webinar->poster,
-                        'materi' => $webinar->materi,
                         'price' => $webinar->price,
                         'description' => $webinar->description,
-                        // $webinar->only('title', 'date', 'speaker', 'place', 'materi', 'link', 'poster', 'materi', 'price', 'description')
                     ],
                 ];
             });
@@ -141,6 +133,32 @@ class WebinarController extends Controller
         ]);
     }
 
+    public function materiWebinar($webinar_id)
+    {
+        $webinar = Webinar::findOrFail($webinar_id);
+
+        if (!$webinar) {
+            return response()->json([
+                "message" => "webinar not found"
+            ], 404);
+        }
+
+        return response()->json($webinar->materi);
+    }
+
+    public function linkWebinar($webinar_id)
+    {
+        $webinar = Webinar::findOrFail($webinar_id);
+
+        if (!$webinar) {
+            return response()->json([
+                "message" => "webinar not found"
+            ], 404);
+        }
+
+        return response()->json($webinar->link);
+    }
+
     public function webinarParticipants(Request $request, $webinar_id)
     {
         // $participants = Participant::where('webinar_id', $webinar_id)
@@ -168,7 +186,7 @@ class WebinarController extends Controller
             ]);
         }
 
-        return response()->json( [
+        return response()->json([
             'participant_data' => $participant_data
         ]);
     }

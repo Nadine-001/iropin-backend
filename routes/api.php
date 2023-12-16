@@ -37,6 +37,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/webinarList', [WebinarController::class, 'webinarList']);
     Route::get('/webinarList/{webinar_id}', [WebinarController::class, 'webinarListDetail']);
     Route::post('/webinarRegistration/{webinar_id}', [InvoiceController::class, 'webinarRegistration']);
+    Route::get('/materiWebinar/{webinar_id}', [WebinarController::class, 'materiWebinar']);
+    Route::get('/linkWebinar/{webinar_id}', [WebinarController::class, 'linkWebinar']);
 
     Route::post('/logout', [AuthController::class, 'logout']);
 
