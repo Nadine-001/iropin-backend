@@ -8,7 +8,6 @@ use App\Models\Biodata;
 use App\Models\Address;
 use App\Models\Education;
 use App\Models\Office;
-use App\Models\RegistrationPayment;
 use App\Models\Role;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
