@@ -184,25 +184,18 @@ class UserController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
+        // try {
         $status = Password::sendResetLink($request->only('email'));
-
-        // dd($status);
 
         if ($status === Password::RESET_LINK_SENT)
             $email = $request->email;
-
+        else
+            return response()->json('failed to send reset password link', 400);
+        
         return response()->json([
             'email' => $email
         ]);
-
-        // return $status === Password::RESET_LINK_SENT
-        //     ? back()->with(['status' => __($status)])
-        //     : back()->withErrors(['email' => __($status)]);
     }
-
-    // public function resetPassword(Request $request, $token) {
-    //     return response()->json(['token' => $token]);
-    // }
 
     public function updatePassword(Request $request)
     {
@@ -225,14 +218,28 @@ class UserController extends Controller
             }
         );
 
-        // dd($status);
-
-        if ($status === Password::RESET_LINK_SENT)
+        if ($status === Password::PASSWORD_RESET)
             return response()->json('reset password success');
-
-        // return $status === Password::PASSWORD_RESET
-        //     ? redirect()->route('login')->with('status', __($status))
-        //     : back()->withErrors(['email' => [__($status)]]);
+        else if ($status === Password::INVALID_USER)
+            return response()->json(
+                [
+                    'message' => 'failed to reset password',
+                    'error' => 'invalid user'
+                ],
+                400
+            );
+        else if ($status === Password::INVALID_TOKEN)
+            return response()->json([
+                'message' => 'failed to reset password',
+                'error' => 'invalid token'
+            ], 400);
+        else if ($status === Password::RESET_THROTTLED)
+            return response()->json([
+                'message' => 'failed to reset password',
+                'error' => 'reset throttled'
+            ], 400);
+        else
+            return response()->json('failed to reset password', 400);
     }
 
     public function userList(Request $request)
