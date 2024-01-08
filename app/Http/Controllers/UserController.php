@@ -186,10 +186,18 @@ class UserController extends Controller
 
         $status = Password::sendResetLink($request->only('email'));
 
-        dd($status);
-        return $status === Password::RESET_LINK_SENT
-            ? back()->with(['status' => __($status)])
-            : back()->withErrors(['email' => __($status)]);
+        // dd($status);
+
+        if ($status === Password::RESET_LINK_SENT)
+            $email = $request->email;
+
+        return response()->json([
+            'email' => $email
+        ]);
+
+        // return $status === Password::RESET_LINK_SENT
+        //     ? back()->with(['status' => __($status)])
+        //     : back()->withErrors(['email' => __($status)]);
     }
 
     // public function resetPassword(Request $request, $token) {
@@ -217,11 +225,14 @@ class UserController extends Controller
             }
         );
 
-        dd($status);
+        // dd($status);
 
-        return $status === Password::PASSWORD_RESET
-            ? redirect()->route('login')->with('status', __($status))
-            : back()->withErrors(['email' => [__($status)]]);
+        if ($status === Password::RESET_LINK_SENT)
+            return response()->json('reset password success');
+
+        // return $status === Password::PASSWORD_RESET
+        //     ? redirect()->route('login')->with('status', __($status))
+        //     : back()->withErrors(['email' => [__($status)]]);
     }
 
     public function userList(Request $request)
