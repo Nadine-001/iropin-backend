@@ -22,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         ResetPassword::createUrlUsing(function (User $user, string $token) {
-            return 'https://example.com/reset-password?token='.$token;
+            return 'http://103.75.66.221/#/auth/resetpassword?token=' . $token . '&email=' . $user->email;
         });
     }
 }

@@ -182,16 +182,21 @@ class UserController extends Controller
 
     public function forgotPassword(Request $request)
     {
-        $request->validate(['email' => 'required|email']);
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
 
-        // try {
+        if ($validator->fails()) {
+            return response()->json($validator->errors());
+        }
+
         $status = Password::sendResetLink($request->only('email'));
 
         if ($status === Password::RESET_LINK_SENT)
             $email = $request->email;
         else
             return response()->json('failed to send reset password link', 400);
-        
+
         return response()->json([
             'email' => $email
         ]);
@@ -199,11 +204,15 @@ class UserController extends Controller
 
     public function updatePassword(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'token' => 'required',
             'email' => 'required|email',
             'password' => 'required|min:8',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors());
+        }
 
         $status = Password::reset(
             $request->only('email', 'password', 'token'),
@@ -339,8 +348,22 @@ class UserController extends Controller
 
     public function profile(Request $request)
     {
+        $user = User::findOrFail(Auth::user()->id);
+
+        $registration = Registration::where('user_id', $user->id)->firstOrFail();
+
+        $documents = RegistrationFormDetail::where('registration_id', $registration->id)
+            ->with('document')
+            ->get();
+
         try {
-            $user = User::findOrFail(Auth::user()->id);
+            $document_data = $documents->map(function ($document) {
+                return [
+                    'document_name' => $document->val,
+                    'document_path' => $document->document->path,
+                    'key' => $document->key,
+                ];
+            });
 
             return response()->json([
                 'user' => $user->only('id', 'email', 'role_id', 'status', 'membership_number'),
@@ -348,6 +371,7 @@ class UserController extends Controller
                 'address' => $user->address,
                 'education' => $user->education,
                 'office' => $user->office,
+                'document_data' => $document_data
             ]);
         } catch (\Throwable $th) {
             return response()->json([
