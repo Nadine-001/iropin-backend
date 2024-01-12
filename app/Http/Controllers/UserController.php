@@ -352,7 +352,7 @@ class UserController extends Controller
 
     public function deleteUser(Request $request, $email)
     {
-        $user = User::where('email', $email);
+        $user = User::where('email', $email)->first();
         $deleted = $user->delete();
 
         if (!$deleted) {
