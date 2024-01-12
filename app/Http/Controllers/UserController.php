@@ -294,6 +294,26 @@ class UserController extends Controller
         ]);
     }
 
+    public function userDetail(Request $request, $user_id)
+    {
+        $user = User::findOrFail($user_id);
+
+        try {
+            $email = $user->email;
+            $role = $user->role;
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'failed to get user data',
+                'errors' => $th->getMessage()
+            ]);
+        }
+
+        return response()->json([
+            'email' => $email,
+            'role' => $role,
+        ]);
+    }
+
     public function updateUser(Request $request, $user_id)
     {
         $user = User::findOrFail($user_id);
@@ -330,9 +350,9 @@ class UserController extends Controller
         ]);
     }
 
-    public function deleteUser(Request $request, $user_id)
+    public function deleteUser(Request $request, $email)
     {
-        $user = User::findOrFail($user_id);
+        $user = User::where('email', $email);
         $deleted = $user->delete();
 
         if (!$deleted) {
