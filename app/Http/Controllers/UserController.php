@@ -256,6 +256,7 @@ class UserController extends Controller
         $loginUser = Auth::user();
         $user_data = User::select('id', 'email', 'role_id')
             ->where('role_id', '<', $loginUser->role_id)
+            ->where('role_id', '>', 1)
             ->get();
 
         return response()->json([
