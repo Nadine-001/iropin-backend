@@ -34,6 +34,7 @@ Route::post('/resetPassword', [UserController::class, 'updatePassword']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/getUserProfile', [UserController::class, 'profile']);
     Route::put('/updateProfile', [AuthController::class, 'update']);
+    Route::get('/member_status', [AuthController::class, 'member_status']);
     // Route::put('/updateUsers/{user_id}', [UserController::class, 'update']);
 
     Route::post('/requestLicence', [LicenceController::class, 'requestLicence']);

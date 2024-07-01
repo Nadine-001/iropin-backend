@@ -26,7 +26,28 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'login success',
             'access_token' => $token,
-            'token_type' => 'Bearer'
+            'token_type' => 'Bearer',
+            'token_type' => 'Bearer',
+            'user_id' => $user->id,
+            'user_email' => $user->email,
+            'role_id' => $user->role->id,
+            'user_role' => $user->role->role_name,
+            // 'permission_list' => $permission_list,
+        ]);
+    }
+
+    public function member_status() {
+        $user = User::findOrFail(Auth::user()->id);
+
+        $exp_date = $user->biodata->exp_date;
+
+        $status = 1;
+        if($exp_date < date('Y-m-d')) {
+            $status = 0;
+        }
+
+        return response()->json([
+            'status' => $status
         ]);
     }
 
