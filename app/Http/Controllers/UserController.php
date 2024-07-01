@@ -371,6 +371,13 @@ class UserController extends Controller
     {
         $user = User::findOrFail(Auth::user()->id);
 
+        $exp_date = $user->biodata->exp_date;
+
+        $user_activation = 1;
+        if ($exp_date < date('Y-m-d')) {
+            $user_activation = 0;
+        }
+
         $registration = Registration::where('user_id', $user->id)->firstOrFail();
 
         $documents = RegistrationFormDetail::where('registration_id', $registration->id)
