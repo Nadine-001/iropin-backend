@@ -20,19 +20,30 @@ class UserController extends Controller
 {
     public function getUsers(Request $request)
     {
-        $loginUser = Auth::user();
-        $users = User::where('role_id', '<', $loginUser->role_id)
+        $users = User::where('role_id', '<', 50)
             ->with(['biodata', 'address', 'office', 'registration'])
             ->get();
 
         try {
             $user_data = $users->map(function ($user) {
+                date_default_timezone_set('Asia/Jakarta');
+                $date = date('Y-m-d');
+
+                $status = $user->registration->status;
+                if ($user->biodata->exp_date < $date) {
+                    $status = 3;
+
+                    $user->registration->update([
+                        'status' => $status
+                    ]);
+                };
+
                 return [
                     'user' => $user->only('id', 'email', 'role_id', 'membership_number'),
                     'name' => $user->biodata ? $user->biodata->name : null,
                     'office_regency_city' => $user->office ? $user->office->office_regency_city : null,
                     'office_name' => $user->office ? $user->office->office_name : null,
-                    'status' => $user->registration ? $user->registration->status : null,
+                    'status' => $status,
                 ];
             });
         } catch (\Throwable $th) {
