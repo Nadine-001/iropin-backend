@@ -3,27 +3,34 @@
 namespace App\Http\Controllers;
 
 use App\Models\Licence;
+use App\Models\User;
 use App\Models\Office;
 use App\Models\Participant;
 use App\Models\Registration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class StatisticController extends Controller
 {
     public function getMemberStatistic() {
-        $member_total = Registration::where('status', '!=', 0)
-            ->where('status', '!=', 2)
-            ->get()
-            ->count();
+        $users = User::where('role_id', '<', 50)->get();
 
-        $active_member = Registration::where('status', 1)
-            ->get()
-            ->count();
+        $member_total = 0;
+        $active_member = 0;
+        $non_active_member = 0;
 
-        $non_active_member = Registration::where('status', 3)
-            ->get()
-            ->count();
+        foreach ($users as $user) {
+            if ($user->registration->status != 0 && $user->registration->status != 2) {
+                $member_total++;
+
+                if ($user->registration->status == 1) {
+                    $active_member++;
+                } else if ($user->registration->status == 3) {
+                    $non_active_member++;
+                }
+            }
+        }
 
         return response()->json([
             'member_total' => $member_total,
