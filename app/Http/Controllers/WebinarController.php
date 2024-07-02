@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Participant;
 use App\Models\Webinar;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
@@ -133,6 +135,55 @@ class WebinarController extends Controller
         ]);
     }
 
+    public function joinedWebinar() {
+        $user = User::findOrFail(Auth::user()->id);
+        $participants = Participant::where('user_id', $user->id)
+            ->get();
+
+        try {
+            $webinars = [];
+            
+            foreach ($participants as $participant) {
+                $webinar = Webinar::where('id', $participant->webinar_id)->first();
+                
+                $status = $participant->status;
+                $note = null;
+                $link = null;
+                $materi = null;
+
+                if ($status == 0) {
+                    $status = 'Proses pengecekkan bukti pembayaran';
+                } else if ($status == 1) { 
+                    $status = 'Terdaftar';
+                    $link = $webinar->link;
+                    $materi = $webinar->materi;
+                } else if ($status == 2) {
+                    $status = 'Ditolak ';
+                    $note = $participant->note;
+                } else {
+                    $status = null;
+                }
+
+                $webinars[] = [
+                    'id' => $webinar->id,
+                    'title' => $webinar->title,
+                    'date' => $webinar->date,
+                    'link' => $link,
+                    'materi' => $materi,
+                    'status' => $status,
+                    'note' => $note,
+                ];
+            }
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'failed to get webinar list',
+                'errors' => $th->getMessage()
+            ]);
+        }
+
+        return response()->json($webinars);
+    }
+
     public function materiWebinar($webinar_id)
     {
         $webinar = Webinar::findOrFail($webinar_id);
@@ -229,19 +280,33 @@ class WebinarController extends Controller
             ], 404);
         }
 
-        $invoice = $participant->invoice;
+        try {
+            $invoice = $participant->invoice;
 
-        $invoice_data = [
-            'file_name' => $invoice->file_name,
-            'file_path' => $invoice->path,
-            'key' => $participant->key,
-        ];
+            $invoice_data = [
+                'file_name' => $invoice->file_name,
+                'file_path' => $invoice->path,
+                'key' => $participant->key,
+            ];
+
+            $status = 0;
+
+            if ($participant->status != $status) {
+                $status = 1;
+            }
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'failed to get invoice data',
+                'errors' => $th->getMessage()
+            ]);
+        }
 
         return response()->json([
             'created_at' => $participant->created_at->toDateString(),
             'name' => $participant->user->biodata->name,
             'title' => $participant->webinar->title,
             'date' => $participant->webinar->date,
+            'status' => $status,
             'invoice_data' => $invoice_data,
         ]);
     }
