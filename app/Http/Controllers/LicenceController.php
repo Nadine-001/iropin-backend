@@ -118,6 +118,12 @@ class LicenceController extends Controller
                     'key' => $file->key,
                 ];
             });
+
+            $status = 0;
+
+            if ($licence->status != $status) {
+                $status = 1;
+            }
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'failed to get file list',
@@ -130,6 +136,7 @@ class LicenceController extends Controller
             'name' => $licence->name,
             'email' => $licence->email,
             'licence_type' => $licence->licence_type,
+            'status' => $status,
             'file_data' => $file_data,
         ]);
     }
@@ -198,21 +205,35 @@ class LicenceController extends Controller
         ]);
     }
 
-    public function approvalList(Request $request)
+    public function approvalList()
     {
-        $approvals = Licence::where('status', 1)->get();
+        try {      
+            $approvals = Licence::where('status', 1)->get();
 
-        try {
-            $approval_data = $approvals->map(function ($approval) {
-                return [
-                    'approvals' => [
-                        'licence_id' => $approval->id,
-                        'licence_type' => $approval->licence_type,
-                        'name' => $approval->name,
-                        'membership_number' => $approval->membership_number,
-                    ],
-                ];
-            });
+            $approval_data = [];
+
+            foreach ($approvals as $approval) {
+                $licence_id = $approval->id;
+                
+                $approval_details = LicenceFormDetail::where('licence_id', $licence_id)
+                    ->where('is_forward_manager', 1)
+                    ->get();
+
+                foreach ($approval_details as $approval_detail) {                                        
+                    $file = File::where('id', $approval_detail->file_id)->value('is_assigned');
+
+                    if ($file == 0) {
+                        $approval_data[] = [
+                            'approvals' => [
+                                'licence_id' => $licence_id,
+                                'licence_type' => $approval->licence_type,
+                                'name' => $approval->name,
+                                'membership_number' => $approval->membership_number,
+                            ]
+                        ];
+                    }
+                }
+            }
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'failed to list the approval',
@@ -291,20 +312,48 @@ class LicenceController extends Controller
         $user = Auth::user();
 
         try {
-            $licences = Licence::select('id', 'licence_type')
+            $licences = Licence::select('id', 'licence_type', 'status', 'note')
                 ->where('user_id', $user->id)
                 // ->with(['licence_form_detail.file' => function ($query) {
                 //         $query->where('is_assigned', 1);
                 // }])
-                ->whereHas('licence_form_detail.file', function ($query) {
-                    $query->where('is_assigned', 1);
-                })
+                // ->whereHas('licence_form_detail.file', function ($query) {
+                //     $query->where('is_assigned', 1);
+                // })
                 ->get();
 
             $licence_data = $licences->map(function ($licence) {
+                $status = $licence->status;
+                $note = null;
+
+                if ($status == 0) {
+                    $status = 'Menunggu validasi';
+                } else if ($status == 1) { // && $is_assigned == 0) {
+                    $licence_details = LicenceFormDetail::where('licence_id', $licence->id)
+                        ->where('is_forward_manager', 1)
+                        ->get();
+
+                    foreach ($licence_details as $licence_detail) {
+                        $is_assigned = $licence_detail->file->is_assigned;
+
+                        if ($is_assigned == 0) {
+                            $status = 'Diteruskan ke manajer';
+                        } else if ($is_assigned == 1) {
+                            $status = 'Disetujui';
+                        }
+                    }
+                } else if ($status == 2) {
+                    $status = 'Ditolak ';
+                    $note = $licence->note;
+                } else {
+                    $status = null;
+                }
+
                 return [
                     'licence_id' => $licence->id,
                     'licence_type' => $licence->licence_type,
+                    'status' => $status,
+                    'note' => $note,
                 ];
             });
         } catch (\Throwable $th) {
