@@ -23,6 +23,15 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        $exp_date = $user->biodata->exp_date;
+
+        date_default_timezone_set('Asia/Jakarta');
+
+        $status = 1;
+        if($exp_date < date('Y-m-d')) {
+            $status = 0;
+        }
+
         return response()->json([
             'message' => 'login success',
             'access_token' => $token,
@@ -32,6 +41,7 @@ class AuthController extends Controller
             'user_email' => $user->email,
             'role_id' => $user->role->id,
             'user_role' => $user->role->role_name,
+            'status' => $status
             // 'permission_list' => $permission_list,
         ]);
     }
