@@ -199,6 +199,12 @@ class RegistrationController extends Controller
                     'key' => $registration_detail->key,
                 ];
             });
+
+            $status = 0;
+
+            if ($user->registration->status != $status) {
+                $status = 1;
+            }
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'failed to get document list',
@@ -212,6 +218,7 @@ class RegistrationController extends Controller
             'address' => $user->address->address,
             'office_regency_city' => $user->office->office_regency_city,
             'office_name' => $user->office->office_name,
+            'status' => $status,
             'document_data' => $document_data,
         ]);
     }
